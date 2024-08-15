@@ -1,0 +1,74 @@
+// prisma/schema.prisma
+datasource db {
+  provider  = "postgresql"
+  url  	    = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String  @map("user_id")
+  type               String
+  provider           String
+  providerAccountId  String  @map("provider_account_id")
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  name               String?
+  username           String?   @unique
+  email              String?   @unique
+  emailVerified      DateTime? @map("email_verified")
+  image              String?
+  accounts           Account[]
+  cursors            Cursor[]  
+  messages           Message[] 
+  lastUsernameChange DateTime? @map("last_username_change")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+ 
+  @@map("users")
+}
+
+model Cursor {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  download_count  Int?
+  likes           Int?
+  donation_amount Float?
+  cover           String
+  file            String
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  userId          String    @map("user_id")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages        Message[] 
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  cursorId  String   @map("cursor_id")
+  userId    String   @map("user_id")
+
+  cursor    Cursor   @relation(fields: [cursorId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
