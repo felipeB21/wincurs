@@ -9,15 +9,28 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ cursors: [] });
   }
 
-  const cursors = await db.cursor.findMany({
-    where: {
-      name: {
-        contains: query,
-        mode: "insensitive",
+  try {
+    const cursors = await db.cursor.findMany({
+      where: {
+        name: {
+          contains: query,
+          mode: "insensitive",
+        },
       },
-    },
-    select: { id: true, name: true, cover: true },
-  });
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            image: true,
+          },
+        },
+      },
+    });
 
-  return NextResponse.json({ cursors });
+    return NextResponse.json({ cursors });
+  } catch (error) {
+    console.error("Error fetching cursors:", error);
+    return NextResponse.json({ msg: "Error fetching cursors", error });
+  }
 }

@@ -41,6 +41,16 @@ export async function POST(req: Request) {
       );
     }
 
+    // Validar extensión del archivo
+    const allowedExtensions = ["zip", "rar"];
+    const fileExtension = file.name.split(".").pop()?.toLowerCase();
+    if (!allowedExtensions.includes(fileExtension || "")) {
+      return NextResponse.json(
+        { error: "Only .zip and .rar files are allowed" },
+        { status: 400 }
+      );
+    }
+
     const bufferFromFile = async (file: File): Promise<Buffer> => {
       const arrayBuffer = await file.arrayBuffer();
       return Buffer.from(arrayBuffer);

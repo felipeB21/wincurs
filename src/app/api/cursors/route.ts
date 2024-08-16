@@ -4,7 +4,15 @@ import { db } from "@/lib/db";
 export async function GET(req: NextRequest) {
   try {
     const cursors = await db.cursor.findMany({
-      include: { user: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            image: true,
+          },
+        },
+      },
     });
 
     if (!cursors || cursors.length === 0) {
