@@ -32,10 +32,14 @@ export default function Home() {
           method: "GET",
         });
         const data = await res.data;
-        setCursor(data);
-        setIsLoading(false);
+        if (Array.isArray(data)) {
+          setCursor(data);
+        } else {
+          console.error("Unexpected data format:", data);
+        }
       } catch (error) {
         console.error("Error fetching cursors:", error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -43,18 +47,26 @@ export default function Home() {
     fetchData();
   }, []);
 
+  if (isLoading) return <CursorSkeleton />;
+
+  if (cursor.length === 0)
+    return (
+      <div className="flex flex-col items-center justify-center h-[60dvh] text-xl">
+        <p>{`:(`}</p>
+        <span>No cursors</span>
+      </div>
+    );
+
   return (
     <div>
-      {isLoading ? (
-        <CursorSkeleton />
-      ) : (
-        <ul className="grid xl:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-2">
-          {cursor.map((cur) => (
-            <li key={cur.id} className="relative group">
-              <Link
-                href={`/cursor/${cur.id}`}
-                className="border block rounded-md"
-              >
+      <ul className="grid xl:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-2">
+        {cursor.map((cur) => (
+          <li key={cur.id} className="relative group">
+            <Link
+              href={`/cursor/${cur.id}`}
+              className="border block rounded-md"
+            >
+              <div className="relative">
                 <Image
                   priority
                   src={cur.cover}
@@ -63,13 +75,10 @@ export default function Home() {
                   height={400}
                   className="object-cover w-auto h-auto"
                 />
-                <div className="absolute inset-0 dark:bg-stone-800/80 flex items-end justify-end gap-5 bg-stone-500/80 bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white p-4 rounded-md">
+                <div className="absolute inset-0 dark:bg-stone-800/80 flex items-end justify-between gap-5 bg-stone-500/80 bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white p-4 rounded-md">
                   <div className="flex flex-col gap-2">
                     <h3 className="text-lg font-bold">{cur.name}</h3>
-                    <Link
-                      href={`/profile/${cur.user.username}`}
-                      className="flex items-center gap-1 hover:bg-stone-600/50 p-1 rounded-md duration-150"
-                    >
+                    <div className="flex items-center gap-1 p-1">
                       <Image
                         className="rounded-full"
                         src={cur.user.image}
@@ -78,24 +87,24 @@ export default function Home() {
                         height={32}
                       />
                       <p className="text-sm">{cur.user.username}</p>
-                    </Link>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <button className="flex items-center gap-1 hover:text-green-400 p-1">
-                      <p> {cur.download_count ? cur.download_count == 0 : 0}</p>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1">
+                      <p>{cur.download_count || 0}</p>
                       <Download className="w-4 h-4" />
-                    </button>
-                    <button className="flex items-center gap-1 hover:text-green-400 p-1">
-                      <p> {cur.likes ? cur.likes == 0 : 0}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <p>{cur.likes || 0}</p>
                       <Heart className="w-4 h-4" />
-                    </button>
+                    </div>
                   </div>
                 </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

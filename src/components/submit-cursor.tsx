@@ -35,9 +35,14 @@ const formSchema = z.object({
     .max(32),
   file: z
     .any()
-    .refine((file) => file instanceof File && file.name.endsWith(".zip"), {
-      message: "You must upload a .zip file.",
-    }),
+    .refine(
+      (file) =>
+        file instanceof File &&
+        (file.name.endsWith(".zip") || file.name.endsWith(".rar")),
+      {
+        message: "You must upload a .zip or .rar file.",
+      }
+    ),
   cover: z
     .any()
     .refine(
@@ -125,7 +130,7 @@ export function CursorForm() {
                 />
               </FormControl>
               <FormDescription>
-                Note: your cursor must be compressed in a .zip file
+                Note: your cursor must be compressed in a .zip or .rar file
               </FormDescription>
               <FormMessage />
             </FormItem>
