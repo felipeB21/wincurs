@@ -3,13 +3,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string[] } }
 ) {
   try {
-    const idAt = params.id.at(0);
+    // Ensure params.id is an array and has at least one element
+    if (!params.id || params.id.length === 0) {
+      return NextResponse.json({ error: "ID is required" }, { status: 400 });
+    }
+
+    const id = params.id[0]; // Get the first part of the catch-all parameter
 
     const cursor = await db.cursor.findUnique({
-      where: { id: idAt },
+      where: { id },
       include: {
         user: {
           select: {

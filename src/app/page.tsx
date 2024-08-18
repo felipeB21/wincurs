@@ -24,6 +24,7 @@ interface Cursor {
 export default function Home() {
   const [cursor, setCursor] = useState<Cursor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,10 +36,10 @@ export default function Home() {
         if (Array.isArray(data)) {
           setCursor(data);
         } else {
-          console.error("Unexpected data format:", data);
+          setError(data.msg);
         }
       } catch (error) {
-        console.error("Error fetching cursors:", error);
+        setError(error as string);
       } finally {
         setIsLoading(false);
       }
@@ -52,8 +53,7 @@ export default function Home() {
   if (cursor.length === 0)
     return (
       <div className="flex flex-col items-center justify-center h-[60dvh] text-xl">
-        <p>{`:(`}</p>
-        <span>No cursors</span>
+        <p>{error}</p>
       </div>
     );
 
@@ -73,7 +73,7 @@ export default function Home() {
                   alt={cur.name}
                   width={400}
                   height={400}
-                  className="object-cover w-auto h-auto"
+                  className="object-cover w-auto h-auto rounded-md"
                 />
                 <div className="absolute inset-0 dark:bg-stone-800/80 flex items-end justify-between gap-5 bg-stone-500/80 bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white p-4 rounded-md">
                   <div className="flex flex-col gap-2">

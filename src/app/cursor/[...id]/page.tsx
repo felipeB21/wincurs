@@ -17,6 +17,8 @@ interface Cursor {
   id: string;
   cover: string;
   name: string;
+  file: string; // Ensure this is the URL to the file
+  price?: number;
   likes: number;
   download_count: number;
   user: User;
@@ -29,25 +31,24 @@ export default function CursorIdPage() {
   const [cursor, setCursor] = useState<Cursor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       if (!id) return;
 
       try {
-        // Fetch the cursor data
         const cursorRes = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/cursor/${id}`
         );
         setCursor(cursorRes.data);
 
-        // Fetch the current user's ID
         const userRes = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/current-user`
         );
         setCurrentUserId(userRes.data.id);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        setError(error as string);
       } finally {
         setIsLoading(false);
       }
@@ -55,6 +56,29 @@ export default function CursorIdPage() {
 
     fetchData();
   }, [id]);
+
+  const handleDownload = async () => {
+    if (!cursor || !currentUserId) return;
+
+    try {
+      // Record the download in the database
+      await axios.put(`/api/download/${cursor.id}`, null, {
+        headers: {
+          "user-id": currentUserId,
+        },
+      });
+
+      // Trigger file download
+      const link = document.createElement("a");
+      link.href = cursor.file; // Ensure this URL points to the actual file
+      link.download = cursor.file.split("/").pop() || "download"; // Use the filename from URL or a default name
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading cursor:", error);
+    }
+  };
 
   const handleDelete = async () => {
     if (!id || !cursor) return;
@@ -69,7 +93,9 @@ export default function CursorIdPage() {
 
   if (isLoading) return <CursorIdSkeleton />;
 
-  if (!cursor) return <p>No cursor found.</p>;
+  if (!cursor) return <p>{error}</p>;
+
+  if (error) return <p>{error}</p>;
 
   return (
     <div className="flex items-center justify-center p-4">
@@ -93,7 +119,10 @@ export default function CursorIdPage() {
             </Link>
           </p>
           <div className="flex items-center gap-3 mt-5 w-max">
-            <button className="flex items-center gap-1 hover:text-green-400">
+            <button
+              onClick={handleDownload}
+              className="flex items-center gap-1 hover:text-green-400"
+            >
               <p>{cursor.download_count || 0}</p>
               <Download className="w-4 h-4" />
             </button>

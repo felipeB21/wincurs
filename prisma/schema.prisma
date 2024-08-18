@@ -29,19 +29,21 @@ model Account {
 }
 
 model User {
-  id                 String    @id @default(cuid())
+  id                 String         @id @default(cuid())
   name               String?
-  username           String?   @unique
-  email              String?   @unique
-  emailVerified      DateTime? @map("email_verified")
+  username           String?        @unique
+  email              String?        @unique
+  emailVerified      DateTime?      @map("email_verified")
   image              String?
   accounts           Account[]
   cursors            Cursor[]  
   messages           Message[] 
-  lastUsernameChange DateTime? @map("last_username_change")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
- 
+  subscription       Subscription?
+  lastUsernameChange DateTime?      @map("last_username_change")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  userDownloads      UserDownload[] 
+
   @@map("users")
 }
 
@@ -49,9 +51,10 @@ model Cursor {
   id              String   @id @default(cuid())
   name            String
   description     String?
-  download_count  Int?
-  likes           Int?
+  download_count  Int      @default(0)
+  likes           Int?     @default(0)
   donation_amount Float?
+  price           Float? 
   cover           String
   file            String
   createdAt       DateTime  @default(now()) @map("created_at")
@@ -59,6 +62,31 @@ model Cursor {
   userId          String    @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages        Message[] 
+  userDownloads   UserDownload[] 
+
+  @@map("cursors")
+}
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  status          String   // active, canceled, etc.
+  stripeCustomerId String  @map("stripe_customer_id")
+  stripeSubscriptionId String @map("stripe_subscription_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserDownload {
+  id       String   @id @default(cuid())
+  userId   String
+  cursorId String
+  user     User     @relation(fields: [userId], references: [id])
+  cursor   Cursor   @relation(fields: [cursorId], references: [id])
+
+  @@unique([userId, cursorId])
 }
 
 model Message {
