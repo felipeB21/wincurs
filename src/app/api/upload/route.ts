@@ -84,13 +84,13 @@ export async function POST(req: Request) {
 
     const coverUploadResult = await uploadStream(coverBuffer, {
       folder: "cursors/covers",
-      public_id: `${user.id}_${name}_cover`,
+      public_id: `${name}_${user.id}_cover`,
       resource_type: "image",
     });
 
     const fileUploadResult = await uploadStream(fileBuffer, {
       folder: "cursors/files",
-      public_id: `${user.id}_${name}_file`,
+      public_id: `${name}_${user.id}_file`,
       resource_type: "auto",
     });
 

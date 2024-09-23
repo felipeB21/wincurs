@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import ClientSessionProvider from "@/components/session-proivder";
+import NextTopLoader from "nextjs-toploader";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,6 +29,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <NextTopLoader
+            color="#50C878"
+            initialPosition={0.08}
+            showSpinner={false}
+            easing="ease"
+            speed={200}
+            zIndex={1600}
+            showAtBottom={false}
+          />
+
           <ClientSessionProvider>
             <Toaster position="bottom-right" />
             <Navbar />

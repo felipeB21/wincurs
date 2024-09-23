@@ -17,7 +17,7 @@ interface Cursor {
   id: string;
   cover: string;
   name: string;
-  file: string; // Ensure this is the URL to the file
+  file: string;
   price?: number;
   likes: number;
   download_count: number;
@@ -96,6 +96,7 @@ export default function CursorIdPage() {
   if (!cursor) return <p>{error}</p>;
 
   if (error) return <p>{error}</p>;
+  console.log(cursor);
 
   return (
     <div className="flex items-center justify-center p-4">

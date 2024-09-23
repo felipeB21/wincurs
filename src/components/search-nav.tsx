@@ -22,6 +22,7 @@ export default function SearchNav() {
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-[30dvw]"
       />
     </form>
   );

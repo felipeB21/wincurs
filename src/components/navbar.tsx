@@ -36,11 +36,11 @@ export default function Navbar() {
             </ul>
           </nav>
         </div>
+        <SearchNav />
         <div className="flex items-center gap-5">
           <Link href={"/submit"}>
             <HoverBtn />
           </Link>
-          <SearchNav />
           <DropdownMenuNav />
         </div>
       </div>

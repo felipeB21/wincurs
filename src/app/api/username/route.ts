@@ -72,7 +72,7 @@ export async function PUT(req: Request) {
   }
 
   try {
-    const updatedUser = await db.user.update({
+    await db.user.update({
       where: { id: userId },
       data: {
         username: newUsername,
@@ -80,9 +80,9 @@ export async function PUT(req: Request) {
       },
     });
 
-    return NextResponse.json(
-      { message: "Username updated successfully", user: updatedUser },
-      { status: 200 }
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_API_URL}/profile/${newUsername}`,
+      { status: 303 }
     );
   } catch (error) {
     return NextResponse.json(
