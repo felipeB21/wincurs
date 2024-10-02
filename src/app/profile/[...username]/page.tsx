@@ -42,22 +42,22 @@ export default function UserPage() {
 
   if (!userData) {
     return (
-      <div className="max-w-5xl mx-auto">
+      <div className="flex items-center justify-center">
         <ProfileSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex gap-3">
+    <div className="flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center gap-3">
         <AvatarUser
-          w="w-14"
-          h="h-14"
+          w="w-16"
+          h="h-16"
           image={userData.image}
           name={userData.username}
         />
-        <p>{userData.username}</p>
+        <p className="font-medium">{userData.username}</p>
       </div>
     </div>
   );

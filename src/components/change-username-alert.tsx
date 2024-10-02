@@ -14,6 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AtSign } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 
 interface ChangeUsernameAlertProps {
   username: string;
@@ -24,6 +25,9 @@ export default function ChangeUsernameAlert({
 }: ChangeUsernameAlertProps) {
   const { update } = useSession();
   const [newUsername, setNewUsername] = useState(username || "");
+
+  const router = useRouter();
+  const path = usePathname();
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewUsername(e.target.value);
@@ -41,8 +45,12 @@ export default function ChangeUsernameAlert({
 
       if (response.ok) {
         update();
-        toast.success("Username updated!");
-        window.location.reload();
+        if (path.startsWith("/profile")) {
+          router.push(`/profile/${newUsername}`);
+        } else {
+          toast.success("Username changed successfuly");
+          router.refresh();
+        }
       } else {
         const errorData = await response.json();
         toast.error(errorData.error);
