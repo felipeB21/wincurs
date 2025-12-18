@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, DM_Sans } from "next/font/google";
 import "./globals.css";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import AppSidebarServer from "@/components/server-sidebar";
+import { Providers } from "@/components/provider";
+import NextTopLoader from "nextjs-toploader";
+
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,11 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${dmSans.variable} dark`}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <NextTopLoader showSpinner={false} color="oklch(0.645 0.246 16.439)" />
+        <Providers>
+          <SidebarProvider>
+            <AppSidebarServer />
+            <main className="p-2 w-full h-screen">
+              <SidebarTrigger />
+              <div className="p-2">{children}</div>
+            </main>
+          </SidebarProvider>
+        </Providers>
       </body>
     </html>
   );
