@@ -9,6 +9,7 @@ import {
   UsersIcon,
   GearIcon,
   CoinVerticalIcon,
+  CursorClickIcon,
 } from "@phosphor-icons/react";
 
 import {
@@ -36,6 +37,7 @@ const ITEMS = [
 ];
 
 const PRIVATE_ITEMS = [
+  { title: "Upload Cursor", url: "/upload-cursor", icon: CursorClickIcon },
   { title: "Pricing", url: "/pricing", icon: CoinVerticalIcon },
   { title: "Settings", url: "/settings", icon: GearIcon },
 ];
@@ -73,24 +75,30 @@ export function AppSidebar({
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
-            <Separator className="my-2" />
-            <SidebarMenu>
-              {PRIVATE_ITEMS.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link
-                      href={item.url}
-                      className={`${
-                        pathname == item.url ? "text-primary font-bold" : ""
-                      }`}
-                    >
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            {user && (
+              <>
+                <Separator className="my-2" />
+                <SidebarMenu>
+                  {PRIVATE_ITEMS.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <Link
+                          href={item.url}
+                          className={`${
+                            pathname === item.url
+                              ? "text-primary font-bold"
+                              : ""
+                          }`}
+                        >
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

@@ -5,13 +5,24 @@ import { api } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CrownSimpleIcon } from "@phosphor-icons/react";
+import { CrownSimpleIcon, DotsThreeVerticalIcon } from "@phosphor-icons/react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import SignOut from "./sign-out";
+import UserCursor from "../cursor/user-cursor";
+import { Separator } from "../ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 export default function ProfileClient({
   username,
@@ -44,35 +55,58 @@ export default function ProfileClient({
 
   return (
     <div>
-      <div className="flex items-center gap-3">
-        {user.image && (
-          <Image
-            src={user.image}
-            alt={user.username}
-            width={128}
-            height={128}
-            className="w-24 h-24 object-cover rounded-full"
-            loading="eager"
-          />
-        )}
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{user.name}</h1>
-            {user.tier === "premium" ? (
-              <Tooltip>
-                <TooltipTrigger>
-                  <CrownSimpleIcon size={28} weight="fill" color="#FFD700" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Premium</p>
-                </TooltipContent>
-              </Tooltip>
-            ) : null}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {user.image && (
+            <Image
+              src={user.image}
+              alt={user.username}
+              width={128}
+              height={128}
+              className="w-24 h-24 object-cover rounded-full"
+              loading="eager"
+            />
+          )}
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">{user.name}</h1>
+              {user.tier === "premium" ? (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <CrownSimpleIcon size={28} weight="fill" color="#FFD700" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Premium</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+            </div>
+            <p className="text-sm text-primary">@{username}</p>
           </div>
-          <p className="text-sm text-primary">@{username}</p>
         </div>
+        {isOwner && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={"secondary"} size={"icon-lg"}>
+                <DotsThreeVerticalIcon size={42} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuGroup className="flex flex-col gap-1">
+                <DropdownMenuItem asChild>
+                  <Link href={"/settings"}>Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <SignOut />
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
-      {isOwner && <SignOut />}
+
+      <Separator className="my-5" />
+      <UserCursor username={username} />
     </div>
   );
 }

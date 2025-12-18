@@ -1,5 +1,10 @@
 import type { ICoverUploadService } from "@/interface/ICoverUpload";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  PutObjectCommand,
+  S3Client,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
 const MIME_TO_EXT: Record<string, string> = {
@@ -37,5 +42,17 @@ export class CoverUploadService implements ICoverUploadService {
     );
 
     return key;
+  }
+
+  async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: process.env.BUCKET_NAME!,
+      Key: key,
+    });
+
+    const url = await getSignedUrl(this.s3, command, {
+      expiresIn: expiresInSeconds,
+    });
+    return url;
   }
 }

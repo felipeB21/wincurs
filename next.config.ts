@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
       {
         hostname: "api.dicebear.com",
       },
+      {
+        hostname: "amzn-s3-wincurs.s3.us-east-1.amazonaws.com",
+      },
     ],
   },
 };

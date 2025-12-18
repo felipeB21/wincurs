@@ -1,11 +1,11 @@
 "use client";
+import UploadCursor from "@/components/cursor/upload";
+import { CursorClickIcon } from "@phosphor-icons/react";
 
-import { GearIcon } from "@phosphor-icons/react";
-
-export default function SettingsPage() {
-  const title = "Settings";
-  const description = "Edit your profile";
-  const icon = <GearIcon size={42} />;
+export default function UploadCursorPage() {
+  const title = "Upload Cursor";
+  const description = "Upload a cursor";
+  const icon = <CursorClickIcon size={42} />;
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">
       <div className="flex items-center gap-3">
@@ -15,6 +15,7 @@ export default function SettingsPage() {
       <p className="max-w-3xl text-muted-foreground lg:text-xl">
         {description}
       </p>
+      <UploadCursor />
     </div>
   );
 }

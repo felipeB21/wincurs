@@ -10,6 +10,7 @@ export default function SignOut() {
 
   return (
     <Button
+      className="w-full"
       disabled={loading}
       onClick={() =>
         authClient.signOut({

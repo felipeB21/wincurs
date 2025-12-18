@@ -1,11 +1,18 @@
 import type { ICursorFileUploadService } from "@/interface/ICursorUpload";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  PutObjectCommand,
+  S3Client,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 import { randomUUID, createHash } from "crypto";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const FILE_MIME_TO_EXT: Record<string, string> = {
   "image/x-icon": "cur",
   "image/vnd.microsoft.icon": "cur",
   "application/zip": "zip",
+  "application/x-zip-compressed": "zip",
+  "application/octet-stream": "zip",
   "application/x-rar-compressed": "rar",
 };
 
@@ -16,21 +23,24 @@ export class CursorFileUploadService implements ICursorFileUploadService {
     region: process.env.AWS_REGION!,
   });
 
+  static isValidMimeType(mime: string) {
+    return Object.keys(FILE_MIME_TO_EXT).includes(mime);
+  }
+
+  static isValidFileSize(size: number) {
+    return size <= CursorFileUploadService.MAX_FILE_SIZE_MB * 1024 * 1024;
+  }
+
   async saveFile(
     userId: string,
     file: Buffer,
     mimeType: string
   ): Promise<{ key: string; size: string; checksum: string }> {
     const ext = FILE_MIME_TO_EXT[mimeType];
-    if (!ext) {
-      throw new Error("Invalid cursor file type");
-    }
+    if (!ext) throw new Error("Invalid cursor file type");
 
-    const maxBytes = CursorFileUploadService.MAX_FILE_SIZE_MB * 1024 * 1024;
-
-    if (file.byteLength > maxBytes) {
+    if (!CursorFileUploadService.isValidFileSize(file.byteLength))
       throw new Error("File exceeds 20MB limit");
-    }
 
     const key = `files/${userId}/${randomUUID()}.${ext}`;
 
@@ -48,5 +58,17 @@ export class CursorFileUploadService implements ICursorFileUploadService {
       size: `${(file.byteLength / 1024 / 1024).toFixed(2)}MB`,
       checksum: createHash("sha256").update(file).digest("hex"),
     };
+  }
+
+  async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: process.env.BUCKET_NAME!,
+      Key: key,
+    });
+
+    const url = await getSignedUrl(this.s3, command, {
+      expiresIn: expiresInSeconds,
+    });
+    return url;
   }
 }

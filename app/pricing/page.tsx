@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 export default function PricingPage() {
   const title = "Pricing";
   const description = "Check out our affordable pricing plans.";
+  const icon = <CoinVerticalIcon size={42} />;
 
   const plans = [
     {
@@ -46,7 +47,7 @@ export default function PricingPage() {
             <h2 className="text-4xl font-bold text-pretty lg:text-6xl">
               {title}
             </h2>
-            <CoinVerticalIcon size={42} />
+            {icon}
           </div>
 
           <p className="max-w-3xl text-muted-foreground lg:text-xl">

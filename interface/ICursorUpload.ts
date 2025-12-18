@@ -8,4 +8,6 @@ export interface ICursorFileUploadService {
     size: string;
     checksum: string;
   }>;
+
+  getSignedUrl(key: string, expiresInSeconds?: number): Promise<string>;
 }
