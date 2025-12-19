@@ -94,7 +94,9 @@ export default function ProfileClient({
             <DropdownMenuContent>
               <DropdownMenuGroup className="flex flex-col gap-1">
                 <DropdownMenuItem asChild>
-                  <Link href={"/settings"}>Settings</Link>
+                  <Button variant={"outline"} asChild>
+                    <Link href={"/settings"}>Settings</Link>
+                  </Button>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <SignOut />
@@ -104,7 +106,6 @@ export default function ProfileClient({
           </DropdownMenu>
         )}
       </div>
-
       <Separator className="my-5" />
       <UserCursor username={username} />
     </div>

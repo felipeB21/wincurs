@@ -6,7 +6,7 @@ export default function TopCreatorsPage() {
   const description = "Edit your profile";
   const icon = <UsersIcon size={42} />;
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <h2 className="text-4xl font-bold text-pretty lg:text-6xl">{title}</h2>
         {icon}

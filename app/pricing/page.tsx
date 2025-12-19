@@ -42,7 +42,7 @@ export default function PricingPage() {
   return (
     <section>
       <div>
-        <div className="mx-auto flex max-w-7xl flex-col gap-6">
+        <div className="flex flex-col gap-6">
           <div className="flex items-center gap-3">
             <h2 className="text-4xl font-bold text-pretty lg:text-6xl">
               {title}

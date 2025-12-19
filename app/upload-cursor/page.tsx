@@ -7,7 +7,7 @@ export default function UploadCursorPage() {
   const description = "Upload a cursor";
   const icon = <CursorClickIcon size={42} />;
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <h2 className="text-4xl font-bold text-pretty lg:text-6xl">{title}</h2>
         {icon}
