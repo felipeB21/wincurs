@@ -9,3 +9,12 @@ export async function getSession() {
 
   return session;
 }
+
+export async function updateAvatar(newAvatar: string) {
+  await auth.api.updateUser({
+    headers: await headers(),
+    body: {
+      image: newAvatar,
+    },
+  });
+}
