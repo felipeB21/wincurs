@@ -141,4 +141,51 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       previewImage: await coverService.getSignedUrl(cursorById[0].previewImage),
       fileUrl: await fileService.getSignedUrl(cursorById[0].fileUrl),
     };
-  });
+  })
+  .get(
+    "/desc",
+    async ({ query }) => {
+      const limit = query.limit;
+      const offset = query.offset;
+
+      const cursors = await db
+        .select({
+          id: cursor.id,
+          name: cursor.name,
+          description: cursor.description,
+          previewImage: cursor.previewImage,
+          fileUrl: cursor.fileUrl,
+          createdAt: cursor.createdAt,
+          userId: user.id,
+          username: user.username,
+          userAvatar: user.image,
+        })
+        .from(cursor)
+        .innerJoin(user, eq(cursor.userId, user.id))
+        .orderBy(desc(cursor.createdAt))
+        .limit(limit);
+
+      const coverService = new CoverUploadService();
+      const fileService = new CursorFileUploadService();
+
+      const cursorsWithUrls = await Promise.all(
+        cursors.map(async (c) => ({
+          ...c,
+          previewImage: await coverService.getSignedUrl(c.previewImage),
+          fileUrl: await fileService.getSignedUrl(c.fileUrl),
+        }))
+      );
+
+      return {
+        cursors: cursorsWithUrls,
+        hasMore: cursors.length === limit,
+        nextOffset: offset + cursors.length,
+      };
+    },
+    {
+      query: t.Object({
+        limit: t.Number(),
+        offset: t.Number(),
+      }),
+    }
+  );
