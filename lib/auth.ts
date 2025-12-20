@@ -24,6 +24,16 @@ export const auth = betterAuth({
       },
     },
   },
+  user: {
+    additionalFields: {
+      tier: {
+        type: ["free", "premium"],
+        required: false,
+        defaultValue: "free",
+        input: false,
+      },
+    },
+  },
   account: {
     accountLinking: {
       enabled: true,
