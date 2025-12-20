@@ -18,3 +18,17 @@ export async function updateAvatar(newAvatar: string) {
     },
   });
 }
+
+export async function updateUser(name: string, username: string) {
+  try {
+    await auth.api.updateUser({
+      headers: await headers(),
+      body: {
+        name,
+        username,
+      },
+    });
+  } catch (err) {
+    throw err;
+  }
+}

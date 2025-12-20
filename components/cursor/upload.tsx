@@ -49,7 +49,7 @@ export default function UploadCursor() {
   return (
     <form
       onSubmit={handleSubmit((data) => mutation.mutate(data))}
-      className="max-w-lg flex flex-col gap-5"
+      className="flex flex-col gap-5"
     >
       <div className="space-y-1 w-full">
         <Label htmlFor="name" className="text-lg font-bold">

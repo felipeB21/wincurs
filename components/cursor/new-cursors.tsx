@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 
 export default function NewCursors() {
   const title = "New Cursors";
@@ -24,8 +25,14 @@ export default function NewCursors() {
         {icon}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 justify-between">
-        {isLoading && <p>Cargando...</p>}
+      <div className="grid grid-cols-2 md:grid-cols-3 justify-between w-full">
+        {isLoading && (
+          <div className="flex items-center gap-20 justify-between">
+            <Skeleton className="w-100 h-50" />
+            <Skeleton className="w-100 h-50" />
+            <Skeleton className="w-100 h-50" />
+          </div>
+        )}
         {isError && <p>Error al cargar cursors</p>}
         {data?.data?.cursors.map((c) => (
           <Link href={`/cursor/${c.id}`} key={c.id} className="w-max">
