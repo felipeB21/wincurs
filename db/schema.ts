@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  unique,
+} from "drizzle-orm/pg-core";
 import { pgEnum } from "drizzle-orm/pg-core";
 
 export const userTierEnum = pgEnum("user_tier", ["free", "premium"]);
@@ -50,6 +57,49 @@ export const cursor = pgTable(
     index("cursor_name_idx").on(table.name),
   ]
 );
+
+export const cursorLike = pgTable(
+  "cursor_like",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    cursorId: text("cursor_id")
+      .notNull()
+      .references(() => cursor.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    unique("cursor_like_user_cursor_unique").on(table.userId, table.cursorId),
+    index("cursor_like_userId_idx").on(table.userId),
+    index("cursor_like_cursorId_idx").on(table.cursorId),
+  ]
+);
+
+export const cursorComment = pgTable(
+  "cursor_comment",
+  {
+    id: text("id").primaryKey(),
+    content: text("content").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    cursorId: text("cursor_id")
+      .notNull()
+      .references(() => cursor.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("cursor_comment_userId_idx").on(table.userId),
+    index("cursor_comment_cursorId_idx").on(table.cursorId),
+  ]
+);
+
 export const session = pgTable(
   "session",
   {
@@ -119,6 +169,17 @@ export const cursorRelations = relations(cursor, ({ one }) => ({
   user: one(user, {
     fields: [cursor.userId],
     references: [user.id],
+  }),
+}));
+
+export const cursorCommentRelations = relations(cursorComment, ({ one }) => ({
+  user: one(user, {
+    fields: [cursorComment.userId],
+    references: [user.id],
+  }),
+  cursor: one(cursor, {
+    fields: [cursorComment.cursorId],
+    references: [cursor.id],
   }),
 }));
 

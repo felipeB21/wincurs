@@ -188,4 +188,5 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         offset: t.Number(),
       }),
     }
-  );
+  )
+  .get("/most-liked", async () => {});

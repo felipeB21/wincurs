@@ -88,7 +88,7 @@ export default function EditProfileClient({
               alt="Avatar"
               width={100}
               height={100}
-              className="cursor-pointer hover:opacity-50"
+              className="cursor-pointer hover:opacity-50 w-20 h-20 rounded-full"
               loading="eager"
             />
           </DialogTrigger>

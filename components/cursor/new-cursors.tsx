@@ -17,6 +17,7 @@ export default function NewCursors() {
     queryKey: ["cursors-preview"],
     queryFn: () => api.cursor.desc.get({ query: { limit, offset: 0 } }),
   });
+  const cursors = data?.data?.cursors ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -27,30 +28,36 @@ export default function NewCursors() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 justify-between w-full">
         {isLoading && (
-          <div className="flex items-center gap-20 justify-between">
-            <Skeleton className="w-100 h-50" />
-            <Skeleton className="w-100 h-50" />
-            <Skeleton className="w-100 h-50" />
+          <div className="flex gap-6 col-span-full">
+            <Skeleton className="w-48 h-48" />
+            <Skeleton className="w-48 h-48" />
+            <Skeleton className="w-48 h-48" />
           </div>
         )}
-        {isError && <p>Error al cargar cursors</p>}
-        {data?.data?.cursors.map((c) => (
-          <Link href={`/cursor/${c.id}`} key={c.id} className="w-max">
-            <Image
-              src={c.previewImage}
-              alt={c.name}
-              width={200}
-              height={200}
-              className="rounded-md"
-            />
-          </Link>
-        ))}
-      </div>
 
-      <div className="mt-4 flex items-center justify-center">
-        <Button asChild size={"lg"} className="w-50">
-          <Link href="/cursor/newest">View More</Link>
-        </Button>
+        {isError && (
+          <p className="col-span-full text-red-500">
+            There was an error fetching the cursors
+          </p>
+        )}
+
+        {!isLoading && !isError && cursors.length === 0 && (
+          <p className="col-span-full text-sm text-gray-300">No cursors yet.</p>
+        )}
+
+        {!isLoading &&
+          !isError &&
+          cursors.map((c) => (
+            <Link href={`/cursor/${c.id}`} key={c.id} className="w-max">
+              <Image
+                src={c.previewImage}
+                alt={c.name}
+                width={200}
+                height={200}
+                className="rounded-md"
+              />
+            </Link>
+          ))}
       </div>
     </div>
   );
