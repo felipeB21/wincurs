@@ -40,9 +40,8 @@ export const cursor = pgTable(
     previewImage: text("preview_image").notNull(),
     fileUrl: text("file_url").notNull(),
     fileType: cursorFileTypeEnum("file_type").notNull(),
-    fileSize: text("file_size"), // optional, e.g. "2.4MB"
-    checksum: text("checksum"), // optional (sha256)
-    // Ownership
+    fileSize: text("file_size"),
+    checksum: text("checksum"),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),

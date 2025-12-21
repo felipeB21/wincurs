@@ -1,11 +1,11 @@
 import { Elysia, t } from "elysia";
 import { randomUUID } from "crypto";
 import { db } from "@/db";
-import { cursor, user } from "@/db/schema";
+import { cursor, cursorLike, user } from "@/db/schema";
 import { getSession } from "@/lib/auth-server";
 import { CoverUploadService } from "@/services/cover";
 import { CursorFileUploadService } from "@/services/cursor";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 type CursorFileType = "cur" | "zip" | "rar";
 
@@ -184,9 +184,59 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
     },
     {
       query: t.Object({
-        limit: t.Number(),
-        offset: t.Number(),
+        limit: t.Number({ default: 6 }),
+        offset: t.Number({ default: 0 }),
       }),
     }
   )
-  .get("/most-liked", async () => {});
+  .get(
+    "/most-liked",
+    async ({ query }) => {
+      const limit = query.limit;
+      const offset = query.offset;
+
+      const rows = await db
+        .select({
+          id: cursor.id,
+          name: cursor.name,
+          description: cursor.description,
+          previewImage: cursor.previewImage,
+          fileUrl: cursor.fileUrl,
+          createdAt: cursor.createdAt,
+          userId: user.id,
+          username: user.username,
+          userAvatar: user.image,
+          likeCount: sql<number>`count(${cursorLike.id})`.as("likeCount"),
+        })
+        .from(cursor)
+        .leftJoin(cursorLike, eq(cursor.id, cursorLike.cursorId))
+        .innerJoin(user, eq(cursor.userId, user.id))
+        .groupBy(cursor.id, user.id)
+        .orderBy(sql`count(${cursorLike.id}) DESC`, desc(cursor.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      const coverService = new CoverUploadService();
+      const fileService = new CursorFileUploadService();
+
+      const cursorsWithUrls = await Promise.all(
+        rows.map(async (c) => ({
+          ...c,
+          previewImage: await coverService.getSignedUrl(c.previewImage),
+          fileUrl: await fileService.getSignedUrl(c.fileUrl),
+        }))
+      );
+
+      return {
+        cursors: cursorsWithUrls,
+        hasMore: rows.length === limit,
+        nextOffset: offset + rows.length,
+      };
+    },
+    {
+      query: t.Object({
+        limit: t.Number({ default: 20 }),
+        offset: t.Number({ default: 0 }),
+      }),
+    }
+  );
