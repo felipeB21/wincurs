@@ -148,6 +148,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         userName: user.name,
         username: user.username,
         userImage: user.image,
+        userTier: user.tier,
 
         likes: sql<number>`
   (select count(*)::int from cursor_like where cursor_id = ${cursor.id})
@@ -189,41 +190,49 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
   .get(
     "/desc",
     async ({ query }) => {
-      const limit = query.limit;
-      const offset = query.offset;
+      const { limit, offset } = query;
 
-      const cursors = await db
+      const rows = await db
         .select({
           id: cursor.id,
           name: cursor.name,
-          description: cursor.description,
           previewImage: cursor.previewImage,
-          fileUrl: cursor.fileUrl,
           createdAt: cursor.createdAt,
           userId: user.id,
+          userName: user.name,
           username: user.username,
-          userAvatar: user.image,
+          userImage: user.image,
+          userTier: user.tier,
+          likes: sql<number>`
+          (select count(*)::int
+           from cursor_like
+           where cursor_like.cursor_id = ${cursor.id})
+        `,
+          downloads: sql<number>`
+          (select count(*)::int
+           from cursor_download
+           where cursor_download.cursor_id = ${cursor.id})
+        `,
         })
         .from(cursor)
         .innerJoin(user, eq(cursor.userId, user.id))
         .orderBy(desc(cursor.createdAt))
-        .limit(limit);
+        .limit(limit)
+        .offset(offset);
 
       const coverService = new CoverUploadService();
-      const fileService = new CursorFileUploadService();
 
       const cursorsWithUrls = await Promise.all(
-        cursors.map(async (c) => ({
+        rows.map(async (c) => ({
           ...c,
           previewImage: await coverService.getSignedUrl(c.previewImage),
-          fileUrl: await fileService.getSignedUrl(c.fileUrl),
         }))
       );
 
       return {
         cursors: cursorsWithUrls,
-        hasMore: cursors.length === limit,
-        nextOffset: offset + cursors.length,
+        hasMore: rows.length === limit,
+        nextOffset: offset + rows.length,
       };
     },
     {

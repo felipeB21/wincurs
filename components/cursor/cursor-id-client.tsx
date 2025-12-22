@@ -4,7 +4,11 @@ import { api } from "@/lib/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { DownloadSimpleIcon, HeartIcon } from "@phosphor-icons/react";
+import {
+  CrownSimpleIcon,
+  DownloadSimpleIcon,
+  HeartIcon,
+} from "@phosphor-icons/react";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { Cursor } from "@/interface/ICursor";
@@ -108,8 +112,8 @@ export default function CursorIdClient({ id }: { id: string }) {
       <Image
         src={cursorData.previewImage}
         alt={cursorData.name}
-        width={300}
-        height={300}
+        width={1000}
+        height={1000}
         className="w-auto h-100 object-contain"
         loading="eager"
       />
@@ -133,7 +137,23 @@ export default function CursorIdClient({ id }: { id: string }) {
               loading="eager"
             />
             <div className="flex flex-col items-start leading-none">
-              <p className="text-sm m-0">{cursorData.userName}</p>
+              <div className="flex items-center gap-1">
+                <h5 className="text-sm m-0">{cursorData.userName}</h5>
+                {cursorData.userTier === "premium" ? (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <CrownSimpleIcon
+                        size={14}
+                        weight="fill"
+                        color="#FFD700"
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Premium</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
+              </div>
               <span className="text-[10px] text-primary font-bold m-0">
                 @{cursorData.username}
               </span>
