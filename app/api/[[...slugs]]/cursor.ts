@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { randomUUID } from "crypto";
 import { db } from "@/db";
-import { cursor, cursorLike, user } from "@/db/schema";
+import { cursor, cursorDownload, cursorLike, user } from "@/db/schema";
 import { getSession } from "@/lib/auth-server";
 import { CoverUploadService } from "@/services/cover";
 import { CursorFileUploadService } from "@/services/cursor";
@@ -130,16 +130,56 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
   .get("/:id", async ({ params }) => {
     const { id } = params as { id: string };
 
-    const cursorById = await db.select().from(cursor).where(eq(cursor.id, id));
-    if (!cursorById) return { message: "Cursor not found" };
+    const session = await getSession();
+    const userId = session?.user?.id ?? null;
+
+    const rows = await db
+      .select({
+        id: cursor.id,
+        name: cursor.name,
+        description: cursor.description,
+        previewImage: cursor.previewImage,
+        fileUrl: cursor.fileUrl,
+        fileType: cursor.fileType,
+        fileSize: cursor.fileSize,
+        checksum: cursor.checksum,
+        createdAt: cursor.createdAt,
+
+        userName: user.name,
+        username: user.username,
+        userImage: user.image,
+
+        likes: sql<number>`(select count(*) from cursor_like where cursor_id = ${cursor.id})`,
+        downloads: sql<number>`(select count(*) from cursor_download where cursor_id = ${cursor.id})`,
+
+        likedByUser: sql<boolean>`
+        exists(
+          select 1 from cursor_like
+          where cursor_like.cursor_id = ${cursor.id}
+          and cursor_like.user_id = ${userId}
+        )
+      `,
+      })
+      .from(cursor)
+      .innerJoin(user, eq(cursor.userId, user.id))
+      .leftJoin(cursorLike, eq(cursorLike.cursorId, cursor.id))
+      .leftJoin(cursorDownload, eq(cursorDownload.cursorId, cursor.id))
+      .where(eq(cursor.id, id))
+      .groupBy(cursor.id, user.id);
+
+    if (rows.length === 0) {
+      return { message: "Cursor not found" };
+    }
+
+    const c = rows[0];
 
     const coverService = new CoverUploadService();
     const fileService = new CursorFileUploadService();
 
     return {
-      ...cursorById[0],
-      previewImage: await coverService.getSignedUrl(cursorById[0].previewImage),
-      fileUrl: await fileService.getSignedUrl(cursorById[0].fileUrl),
+      ...c,
+      previewImage: await coverService.getSignedUrl(c.previewImage),
+      fileUrl: await fileService.getSignedUrl(c.fileUrl),
     };
   })
   .get(
@@ -239,4 +279,55 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         offset: t.Number({ default: 0 }),
       }),
     }
-  );
+  )
+  .post("/:id/download", async ({ params }) => {
+    const { id } = params as { id: string };
+
+    const [c] = await db
+      .select({ fileUrl: cursor.fileUrl })
+      .from(cursor)
+      .where(eq(cursor.id, id));
+
+    if (!c) return { error: "Cursor not found" };
+
+    await db.insert(cursorDownload).values({
+      id: randomUUID(),
+      cursorId: id,
+    });
+
+    const fileService = new CursorFileUploadService();
+
+    return {
+      fileUrl: await fileService.getSignedUrl(c.fileUrl),
+    };
+  })
+  .post("/:id/like", async ({ params, set }) => {
+    const session = await getSession();
+
+    if (!session?.user?.id) {
+      set.status = 401;
+      return { error: "Unauthorized" };
+    }
+
+    const { id } = params as { id: string };
+    const userId = session.user.id;
+
+    const existingLike = await db.query.cursorLike.findFirst({
+      where: (cl, { and, eq }) =>
+        and(eq(cl.cursorId, id), eq(cl.userId, userId)),
+    });
+
+    if (existingLike) {
+      await db.delete(cursorLike).where(eq(cursorLike.id, existingLike.id));
+
+      return { liked: false };
+    }
+
+    await db.insert(cursorLike).values({
+      id: randomUUID(),
+      cursorId: id,
+      userId,
+    });
+
+    return { liked: true };
+  });
