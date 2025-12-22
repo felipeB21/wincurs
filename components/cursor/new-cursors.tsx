@@ -45,19 +45,24 @@ export default function NewCursors() {
           <p className="col-span-full text-sm text-gray-300">No cursors yet.</p>
         )}
 
-        {!isLoading &&
-          !isError &&
-          cursors.map((c) => (
-            <Link href={`/cursor/${c.id}`} key={c.id} className="w-max">
-              <Image
-                src={c.previewImage}
-                alt={c.name}
-                width={200}
-                height={200}
-                className="rounded-md"
-              />
-            </Link>
-          ))}
+        {!isLoading && !isError && (
+          <div className="flex flex-col gap-5">
+            {cursors.map((c) => (
+              <Link href={`/cursor/${c.id}`} key={c.id} className="w-max">
+                <Image
+                  src={c.previewImage}
+                  alt={c.name}
+                  width={200}
+                  height={200}
+                  className="rounded-md"
+                />
+              </Link>
+            ))}
+            <Button className="flex items-center justify-center" asChild>
+              <Link href={"/cursor/newest"}>View More</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

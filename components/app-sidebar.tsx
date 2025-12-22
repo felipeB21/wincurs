@@ -1,10 +1,8 @@
-// components/app-sidebar.client.tsx
 "use client";
 
 import {
   HouseIcon,
   MagnifyingGlassIcon,
-  BinocularsIcon,
   FireIcon,
   UsersIcon,
   GearIcon,
@@ -31,7 +29,6 @@ import { Separator } from "./ui/separator";
 const ITEMS = [
   { title: "Home", url: "/", icon: HouseIcon },
   { title: "Search", url: "/search", icon: MagnifyingGlassIcon },
-  { title: "Explore", url: "/explore", icon: BinocularsIcon },
   { title: "Popular", url: "/popular", icon: FireIcon },
   { title: "Top Creators", url: "/top-creators", icon: UsersIcon },
 ];
