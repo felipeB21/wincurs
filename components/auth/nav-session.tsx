@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { SignInDialog, SignUpDialog } from "./auth-dialog";
 import Image from "next/image";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { CrownSimpleIcon } from "@phosphor-icons/react";
 
 type Props = {
   user?: {
     name: string | null;
     username?: string | null;
     image: string | null;
+    tier: string | null;
   };
 };
 
@@ -28,7 +31,19 @@ export default function NavSession({ user }: Props) {
             className="rounded-full object-cover"
           />
           <div className="flex flex-col items-start leading-none">
-            <p className="text-sm m-0">{user.name}</p>
+            <div className="flex items-center gap-1">
+              <h1 className="text-sm m-0">{user.name}</h1>
+              {user.tier === "premium" ? (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <CrownSimpleIcon size={14} weight="fill" color="#FFD700" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Premium</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+            </div>
             <span className="text-[10px] text-primary font-bold m-0">
               @{user.username}
             </span>

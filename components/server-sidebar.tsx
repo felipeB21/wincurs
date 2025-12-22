@@ -9,6 +9,7 @@ export default async function AppSidebarServer() {
         username: session.user.username ?? null,
         name: session.user.name ?? null,
         image: session.user.image ?? null,
+        tier: session.user.tier ?? null,
       }
     : undefined;
 
