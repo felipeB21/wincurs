@@ -243,6 +243,67 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
     }
   )
   .get(
+    "/search",
+    async ({ query }) => {
+      const { q, limit, offset } = query;
+
+      if (!q || q.trim().length === 0) {
+        return { cursors: [], hasMore: false, nextOffset: offset };
+      }
+
+      const rows = await db
+        .select({
+          id: cursor.id,
+          name: cursor.name,
+          previewImage: cursor.previewImage,
+          createdAt: cursor.createdAt,
+          userId: user.id,
+          userName: user.name,
+          username: user.username,
+          userImage: user.image,
+          userTier: user.tier,
+          likes: sql<number>`
+          (select count(*)::int
+           from cursor_like
+           where cursor_like.cursor_id = ${cursor.id})
+        `,
+          downloads: sql<number>`
+          (select count(*)::int
+           from cursor_download
+           where cursor_download.cursor_id = ${cursor.id})
+        `,
+        })
+        .from(cursor)
+        .innerJoin(user, eq(cursor.userId, user.id))
+        .where(sql`${cursor.name} ILIKE ${`%${q}%`}`)
+        .orderBy(desc(cursor.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      const coverService = new CoverUploadService();
+
+      const cursorsWithUrls = await Promise.all(
+        rows.map(async (c) => ({
+          ...c,
+          previewImage: await coverService.getSignedUrl(c.previewImage),
+        }))
+      );
+
+      return {
+        cursors: cursorsWithUrls,
+        hasMore: rows.length === limit,
+        nextOffset: offset + rows.length,
+      };
+    },
+    {
+      query: t.Object({
+        q: t.String(),
+        limit: t.Number({ default: 10 }),
+        offset: t.Number({ default: 0 }),
+      }),
+    }
+  )
+  .get(
     "/most-liked",
     async ({ query }) => {
       const limit = query.limit;
