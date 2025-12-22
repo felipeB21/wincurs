@@ -118,6 +118,22 @@ export const session = pgTable(
   (table) => [index("session_userId_idx").on(table.userId)]
 );
 
+export const cursorDownload = pgTable(
+  "cursor_download",
+  {
+    id: text("id").primaryKey(),
+    cursorId: text("cursor_id")
+      .notNull()
+      .references(() => cursor.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("cursor_download_cursorId_idx").on(table.cursorId),
+    index("cursor_download_userId_idx").on(table.userId),
+  ]
+);
+
 export const account = pgTable(
   "account",
   {
