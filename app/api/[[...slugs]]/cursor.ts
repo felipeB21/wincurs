@@ -149,8 +149,12 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         username: user.username,
         userImage: user.image,
 
-        likes: sql<number>`(select count(*) from cursor_like where cursor_id = ${cursor.id})`,
-        downloads: sql<number>`(select count(*) from cursor_download where cursor_id = ${cursor.id})`,
+        likes: sql<number>`
+  (select count(*)::int from cursor_like where cursor_id = ${cursor.id})
+`,
+        downloads: sql<number>`
+  (select count(*)::int from cursor_download where cursor_id = ${cursor.id})
+`,
 
         likedByUser: sql<boolean>`
         exists(
@@ -246,7 +250,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
           userId: user.id,
           username: user.username,
           userAvatar: user.image,
-          likeCount: sql<number>`count(${cursorLike.id})`.as("likeCount"),
+          likeCount: sql<number>`count(${cursorLike.id})::int`.as("likeCount"),
         })
         .from(cursor)
         .leftJoin(cursorLike, eq(cursor.id, cursorLike.cursorId))

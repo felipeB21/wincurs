@@ -30,8 +30,10 @@ export default function CursorIdClient({ id }: { id: string }) {
 
   const likeMutation = useMutation({
     mutationFn: () => api.cursor({ id }).like.post(),
+
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["cursor-id", id] });
+
       const previousData = queryClient.getQueryData<CursorResponse>([
         "cursor-id",
         id,
@@ -54,8 +56,13 @@ export default function CursorIdClient({ id }: { id: string }) {
 
       return { previousData };
     },
-    onError: (err, newTodo, context) => {
+
+    onError: (_err, _vars, context) => {
       queryClient.setQueryData(["cursor-id", id], context?.previousData);
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cursor-id", id] });
     },
   });
 
