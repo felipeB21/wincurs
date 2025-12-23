@@ -46,7 +46,7 @@ export default function NewCursors() {
         )}
 
         {!isLoading && !isError && (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-5">
             {cursors.map((c) => (
               <CursorCard key={c.id} cursor={c} />
             ))}
