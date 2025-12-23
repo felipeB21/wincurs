@@ -5,11 +5,19 @@ import { CheckCircleIcon, CoinVerticalIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { authClient } from "@/lib/auth-client";
 
 export default function PricingPage() {
   const title = "Pricing";
   const description = "Check out our affordable pricing plans.";
   const icon = <CoinVerticalIcon size={42} />;
+
+  const buyPremium = async () => {
+    await authClient.checkout({
+      products: ["0ecd6df3-e945-4c1a-8e12-0f174f24b091"],
+      slug: "wincurs",
+    });
+  };
 
   const plans = [
     {
@@ -88,7 +96,13 @@ export default function PricingPage() {
                     ))}
                   </ul>
 
-                  <Button className="w-full">{plan.buttonText}</Button>
+                  <Button
+                    className="w-full"
+                    onClick={plan.name === "premium" ? buyPremium : undefined}
+                    disabled={plan.name === "free"}
+                  >
+                    {plan.buttonText}
+                  </Button>
                 </div>
               </div>
             ))}

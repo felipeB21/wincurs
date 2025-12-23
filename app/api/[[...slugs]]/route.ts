@@ -26,6 +26,40 @@ export const app = new Elysia({ prefix: "/api" })
 
     return result[0];
   })
+  .post("/polar/webhook", async ({ request, set }) => {
+    const body = await request.json();
+    const signature = request.headers.get("polar-signature");
+
+    if (!signature) {
+      set.status = 400;
+      return { error: "Missing signature" };
+    }
+
+    const event = body;
+
+    switch (event.type) {
+      case "subscription.created":
+      case "subscription.active": {
+        const userId = event.data.customer.metadata.userId;
+
+        await db
+          .update(user)
+          .set({ tier: "premium" })
+          .where(eq(user.id, userId));
+        break;
+      }
+
+      case "subscription.canceled":
+      case "subscription.expired": {
+        const userId = event.data.customer.metadata.userId;
+
+        await db.update(user).set({ tier: "free" }).where(eq(user.id, userId));
+        break;
+      }
+    }
+
+    return { ok: true };
+  })
   .use(cursorRoute);
 
 export type App = typeof app;
