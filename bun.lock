@@ -8,6 +8,7 @@
         "@aws-sdk/client-s3": "^3.954.0",
         "@aws-sdk/s3-request-presigner": "^3.955.0",
         "@base-ui/react": "^1.0.0",
+        "@elysiajs/cors": "^1.4.0",
         "@elysiajs/eden": "^1.4.5",
         "@phosphor-icons/react": "^2.1.10",
         "@polar-sh/better-auth": "^1.6.3",
@@ -229,6 +230,8 @@
     "@electric-sql/pglite-socket": ["@electric-sql/pglite-socket@0.0.6", "", { "peerDependencies": { "@electric-sql/pglite": "0.3.2" }, "bin": { "pglite-server": "dist/scripts/server.js" } }, "sha512-6RjmgzphIHIBA4NrMGJsjNWK4pu+bCWJlEWlwcxFTVY3WT86dFpKwbZaGWZV6C5Rd7sCk1Z0CI76QEfukLAUXw=="],
 
     "@electric-sql/pglite-tools": ["@electric-sql/pglite-tools@0.2.7", "", { "peerDependencies": { "@electric-sql/pglite": "0.3.2" } }, "sha512-9dAccClqxx4cZB+Ar9B+FZ5WgxDc/Xvl9DPrTWv+dYTf0YNubLzi4wHHRGRGhrJv15XwnyKcGOZAP1VXSneSUg=="],
+
+    "@elysiajs/cors": ["@elysiajs/cors@1.4.0", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-pb0SCzBfFbFSYA/U40HHO7R+YrcXBJXOWgL20eSViK33ol1e20ru2/KUaZYo5IMUn63yaTJI/bQERuQ+77ND8g=="],
 
     "@elysiajs/eden": ["@elysiajs/eden@1.4.5", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-hIOeH+S5NU/84A7+t8yB1JjxqjmzRkBF9fnLn6y+AH8EcF39KumOAnciMhIOkhhThVZvXZ3d+GsizRc+Fxoi8g=="],
 

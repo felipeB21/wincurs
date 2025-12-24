@@ -3,8 +3,18 @@ import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { cursorRoute } from "./cursor";
+import { cors } from "@elysiajs/cors";
 
 export const app = new Elysia({ prefix: "/api" })
+  .use(
+    cors({
+      credentials: true,
+      origin: [
+        "https://inextricable-stefanie-philately.ngrok-free.dev/",
+        "http://localhost:3000",
+      ],
+    })
+  )
   .get("/profile/:username", async ({ params, set }) => {
     const { username } = params;
 

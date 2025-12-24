@@ -71,12 +71,11 @@ export const auth = betterAuth({
               slug: "wincurs",
             },
           ],
-
-          successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/success`,
+          successUrl: "/success?checkout_id={CHECKOUT_ID}",
           authenticatedUsersOnly: true,
         }),
-        portal(),
         usage(),
+        portal(),
         webhooks({
           secret:
             process.env.POLAR_WEBHOOK_SECRET ||
@@ -85,21 +84,18 @@ export const auth = betterAuth({
                 "POLAR_WEBHOOK_SECRET environment variable is required"
               );
             })(),
-          onPayload: async ({ data, type }) => {
-            if (type === "order.created" || type === "order.paid") {
-              console.log("🎯 Processing payment webhook:", type);
-              console.log("📦 Payload data:", JSON.stringify(data, null, 2));
 
-              try {
-                const userId = data.customer?.externalId;
+          onOrderUpdated: async ({ data }) => {
+            const userId = data.customer.externalId;
+            if (!userId) return;
 
-                console.log(userId);
-              } catch (error) {
-                console.error(
-                  "💥 Error processing subscription webhook:",
-                  error
-                );
-              }
+            if (data.status === "paid") {
+              await db
+                .update(schema.user)
+                .set({
+                  tier: "premium",
+                })
+                .where(eq(schema.user.id, userId));
             }
           },
         }),

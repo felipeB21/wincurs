@@ -10,21 +10,12 @@ import {
 import { pgEnum } from "drizzle-orm/pg-core";
 
 export const userTierEnum = pgEnum("user_tier", ["free", "premium"]);
-export const subscriptionStatusEnum = pgEnum("subscription_status", [
-  "active",
-  "canceled",
-  "past_due",
-  "trialing",
-  "incomplete",
-  "incomplete_expired",
-  "unpaid",
-]);
-
 export const cursorFileTypeEnum = pgEnum("cursor_file_type", [
   "cur",
   "zip",
   "rar",
 ]);
+
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -208,35 +199,6 @@ export const cursorCommentRelations = relations(cursorComment, ({ one }) => ({
   }),
 }));
 
-export const subscription = pgTable(
-  "subscription",
-  {
-    id: text("id").primaryKey(),
-
-    subscriptionId: text("subscription_id").notNull().unique(),
-    customerId: text("customer_id").notNull(),
-    productId: text("product_id").notNull(),
-
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-
-    status: subscriptionStatusEnum("status").notNull(),
-
-    currentPeriodEnd: timestamp("current_period_end"),
-
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [
-    index("subscription_userId_idx").on(table.userId),
-    index("subscription_status_idx").on(table.status),
-  ]
-);
-
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
     fields: [session.userId],
@@ -247,13 +209,6 @@ export const sessionRelations = relations(session, ({ one }) => ({
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
-    references: [user.id],
-  }),
-}));
-
-export const subscriptionRelations = relations(subscription, ({ one }) => ({
-  user: one(user, {
-    fields: [subscription.userId],
     references: [user.id],
   }),
 }));

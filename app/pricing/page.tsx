@@ -23,7 +23,10 @@ export default function PricingPage() {
   const buyPremium = async () => {
     try {
       setIsLoading("checkout");
-      await authClient.checkout({ slug: "wincurs" });
+      await authClient.checkout({
+        slug: "wincurs",
+        referenceId: data?.user.id,
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -75,66 +78,70 @@ export default function PricingPage() {
           </p>
 
           <div className="flex w-full flex-col items-stretch gap-6 md:flex-row">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`flex w-full flex-col rounded-lg border p-6 text-left`}
-              >
-                <Badge className="mb-8 block w-fit uppercase">
-                  {plan.badge}
-                </Badge>
+            {plans.map((plan) => {
+              const isCurrentPlan = data?.user.tier === plan.name;
+              const isPremiumPlan = plan.name === "premium";
 
-                <span className="text-4xl font-medium">{plan.price}</span>
-                <p className="text-muted-foreground">{plan.description}</p>
-
-                <p
-                  className={`text-muted-foreground ${
-                    plan.price === "$0" ? "invisible" : ""
-                  }`}
+              return (
+                <div
+                  key={plan.name}
+                  className="flex w-full flex-col rounded-lg border p-6 text-left"
                 >
-                  Per Month
-                </p>
+                  <Badge className="mb-8 block w-fit uppercase">
+                    {plan.badge}
+                  </Badge>
 
-                <Separator className="my-6" />
+                  <span className="text-4xl font-medium">{plan.price}</span>
+                  <p className="text-muted-foreground">{plan.description}</p>
 
-                <div className="flex h-full flex-col justify-between gap-20">
-                  <ul className="space-y-4 text-muted-foreground">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <CheckCircleIcon className="size-4" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    className="w-full gap-2"
-                    disabled={
-                      isPending ||
-                      plan.name === "free" ||
-                      (data?.user.tier === "premium" && plan.name === "free")
-                    }
-                    onClick={() => {
-                      if (plan.name !== "premium") return;
-
-                      if (data?.user.tier === "free") {
-                        buyPremium();
-                      }
-                    }}
+                  <p
+                    className={`text-muted-foreground ${
+                      plan.price === "$0" ? "invisible" : ""
+                    }`}
                   >
-                    {isLoading && plan.name === "premium" && (
-                      <SpinnerIcon className="animate-spin" />
-                    )}
+                    Per Month
+                  </p>
 
-                    {plan.name === "free"
-                      ? "Current plan"
-                      : data?.user.tier === "premium"
-                      ? "Manage subscription"
-                      : "Upgrade"}
-                  </Button>
+                  <Separator className="my-6" />
+
+                  <div className="flex h-full flex-col justify-between gap-20">
+                    <ul className="space-y-4 text-muted-foreground">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircleIcon className="size-4" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {plan.name !== "free" && (
+                      <Button
+                        className="w-full gap-2"
+                        disabled={
+                          isPending ||
+                          isCurrentPlan ||
+                          (!isPremiumPlan && data?.user.tier === "premium")
+                        }
+                        onClick={() => {
+                          if (!isPremiumPlan) return;
+                          if (data?.user.tier === "free") buyPremium();
+                        }}
+                      >
+                        {isLoading === "checkout" && isPremiumPlan && (
+                          <SpinnerIcon className="animate-spin" />
+                        )}
+
+                        {isCurrentPlan
+                          ? "Current plan"
+                          : isPremiumPlan
+                          ? "Upgrade"
+                          : "Free plan"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
