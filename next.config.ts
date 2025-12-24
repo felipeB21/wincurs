@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
       {
         hostname: "amzn-s3-wincurs.s3.us-east-1.amazonaws.com",
       },
+      { hostname: "media4.giphy.com" },
     ],
   },
 };

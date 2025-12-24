@@ -28,7 +28,7 @@ export default function NavSession({ user }: Props) {
             alt="Avatar"
             width={32}
             height={32}
-            className="rounded-full object-cover"
+            className="rounded-full object-cover h-8 w-8"
           />
           <div className="flex flex-col items-start leading-none">
             <div className="flex items-center gap-1">
