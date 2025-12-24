@@ -3,11 +3,18 @@ import { username } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
-import { polar, checkout, portal, usage } from "@polar-sh/better-auth";
+import {
+  polar,
+  checkout,
+  portal,
+  usage,
+  webhooks,
+} from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
+import { eq } from "drizzle-orm";
 
 const polarClient = new Polar({
-  accessToken: process.env.POLAR_ACCESS_TOKEN,
+  accessToken: process.env.POLAR_ACCESS_TOKEN!,
   // Use 'sandbox' if you're using the Polar Sandbox environment
   // Remember that access tokens, products, etc. are completely separated between environments.
   // Access tokens obtained in Production are for instance not usable in the Sandbox environment.
@@ -19,6 +26,7 @@ export const auth = betterAuth({
     provider: "pg",
     schema,
   }),
+  trustedOrigins: ["https://inextricable-stefanie-philately.ngrok-free.dev/"],
   emailAndPassword: {
     enabled: true,
   },
@@ -59,15 +67,42 @@ export const auth = betterAuth({
         checkout({
           products: [
             {
-              productId: "0ecd6df3-e945-4c1a-8e12-0f174f24b091",
-              slug: "wincurs", // Custom slug for easy reference in Checkout URL, e.g. /checkout/wincurs
+              productId: process.env.POLAR_PREMIUM_PRODUCT_ID!,
+              slug: "wincurs",
             },
           ],
-          successUrl: process.env.POLAR_SUCCESS_URL,
+
+          successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/success`,
           authenticatedUsersOnly: true,
         }),
         portal(),
         usage(),
+        webhooks({
+          secret:
+            process.env.POLAR_WEBHOOK_SECRET ||
+            (() => {
+              throw new Error(
+                "POLAR_WEBHOOK_SECRET environment variable is required"
+              );
+            })(),
+          onPayload: async ({ data, type }) => {
+            if (type === "order.created" || type === "order.paid") {
+              console.log("🎯 Processing payment webhook:", type);
+              console.log("📦 Payload data:", JSON.stringify(data, null, 2));
+
+              try {
+                const userId = data.customer?.externalId;
+
+                console.log(userId);
+              } catch (error) {
+                console.error(
+                  "💥 Error processing subscription webhook:",
+                  error
+                );
+              }
+            }
+          },
+        }),
       ],
     }),
   ],

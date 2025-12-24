@@ -8,6 +8,20 @@
       "when": 1766079550551,
       "tag": "0000_giant_hemingway",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766547860412,
+      "tag": "0001_talented_kitty_pryde",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766547964478,
+      "tag": "0002_common_ricochet",
+      "breakpoints": true
     }
   ]
 }
