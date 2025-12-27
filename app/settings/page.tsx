@@ -1,5 +1,11 @@
 import EditProfile from "@/components/auth/edit-profile";
 import { SettingsIcon } from "@/components/settings-icon";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Settings - wincurs",
+  description: "Edit your profile settings.",
+};
 
 export default function SettingsPage() {
   const title = "Settings";

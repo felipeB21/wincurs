@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
-
 import { Input } from "@/components/ui/input";
 import { CursorCard } from "@/components/cursor/card";
 

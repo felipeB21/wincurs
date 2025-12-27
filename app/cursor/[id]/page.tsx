@@ -1,14 +1,34 @@
-"use server";
-
 import CursorIdClient from "@/components/cursor/cursor-id-client";
 import RelatedContent from "@/components/cursor/related-content";
 import { Separator } from "@/components/ui/separator";
+import { api } from "@/lib/api-client";
+import type { Metadata } from "next";
 
-export default async function CursorIdPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+type Props = {
+  params: {
+    id: string;
+  };
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const cursorId = (await params).id;
+
+  const res = await api.cursor({ id: cursorId }).get();
+
+  const cursor = res.data;
+  if (!cursor || "message" in cursor) {
+    return {
+      title: "Cursor Not Found - wincurs",
+      description: "The requested cursor does not exist.",
+    };
+  }
+  return {
+    title: `${cursor.name} - wincurs`,
+    description: `Download and explore the "${cursor.name}" cursor by ${cursor.userName}. ${cursor.description}`,
+  };
+}
+
+export default async function CursorIdPage({ params }: Props) {
   const { id } = await params;
 
   return (

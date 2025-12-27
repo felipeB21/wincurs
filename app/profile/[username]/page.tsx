@@ -1,17 +1,25 @@
-"use server";
-
 import { getSession } from "@/lib/auth-server";
 import ProfileClient from "../../../components/auth/profile-client";
+import type { Metadata } from "next";
 
-export default async function ProfilePage({
-  params,
-}: {
+type Props = {
   params: Promise<{ username: string }>;
-}) {
-  const { username } = await params;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const username = (await params).username;
+
+  return {
+    title: `${username} - wincurs`,
+    description: `Profile of ${username}, explore their cursors and collections.`,
+  };
+}
+
+export default async function ProfilePage({ params }: Props) {
+  const username = (await params).username;
   const session = await getSession();
 
-  const isOwner = Boolean(session?.user && session.user.username === username);
+  const isOwner = session?.user?.username === username;
 
   return <ProfileClient username={username} isOwner={isOwner} />;
 }
