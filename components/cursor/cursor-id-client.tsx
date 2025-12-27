@@ -13,6 +13,8 @@ import { Button } from "../ui/button";
 import Link from "next/link";
 import { Cursor } from "@/interface/ICursor";
 import CursorIdSkeleton from "./cursor-id-skeleton";
+import { format } from "date-fns";
+import { Separator } from "../ui/separator";
 
 interface ElysiaErrorResponse {
   message?: string;
@@ -118,7 +120,13 @@ export default function CursorIdClient({ id }: { id: string }) {
         loading="eager"
       />
       <div>
-        <h1 className="text-3xl font-bold">{cursorData.name}</h1>
+        <div className="flex items-center gap-5">
+          <h1 className="text-3xl font-bold">{cursorData.name}</h1>
+          <Separator orientation="vertical" />
+          <p className="text-xs text-gray-300">
+            {format(new Date(cursorData.createdAt), "MMMM d, yyyy")}
+          </p>
+        </div>
         <p className="text-gray-300">{cursorData.description}</p>
       </div>
       <div className="flex items-end justify-between">
