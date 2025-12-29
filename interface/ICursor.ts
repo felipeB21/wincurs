@@ -1,13 +1,14 @@
 export interface Cursor {
   id: string;
   name: string;
-  description?: string | null;
   previewImage: string;
-  createdAt: string;
+  createdAt: Date;
+  userId: string;
+  userName: string;
+  username: string;
+  userImage: string | null;
+  userTier: "free" | "premium";
   likes: number;
   downloads: number;
-  likedByUser: boolean;
-  username: string;
-  userName: string;
-  userImage?: string | null;
+  likedByUser?: boolean;
 }
