@@ -1,6 +1,15 @@
-import React from "react";
+"use client";
+import { api } from "@/lib/api-client";
+import { useQuery } from "@tanstack/react-query";
+import { CursorCard } from "./card";
 
-export default function RelatedContent() {
+export default function RelatedContent({ id }: { id: string }) {
+  const { data } = useQuery({
+    queryKey: ["related-cursors"],
+    queryFn: () => api.cursor.related({ id }).get(),
+  });
+  console.log(data);
+
   return (
     <aside className="space-y-4">
       <h3 className="text-sm font-semibold text-muted-foreground">
@@ -8,18 +17,11 @@ export default function RelatedContent() {
       </h3>
 
       <ul className="space-y-3">
-        <li className="flex items-center gap-3">
-          <img
-            src="/cursor-preview.png"
-            alt="Cursor preview"
-            className="h-12 w-12 rounded-md object-cover"
-          />
-          <a href="#" className="text-sm hover:underline">
-            Cursor name
-          </a>
+        <li className="flex flex-col items-center gap-3">
+          {data?.data?.map((cursor) => (
+            <CursorCard key={cursor.id} cursor={cursor} />
+          ))}
         </li>
-
-        {/* repeat for more items */}
       </ul>
     </aside>
   );
