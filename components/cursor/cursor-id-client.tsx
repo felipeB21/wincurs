@@ -123,9 +123,10 @@ export default function CursorIdClient({ id }: { id: string }) {
         <div className="flex items-center gap-5">
           <h1 className="text-3xl font-bold">{cursorData.name}</h1>
           <Separator orientation="vertical" />
-          <p className="text-xs text-gray-300">
-            {format(new Date(cursorData.createdAt), "MMMM d, yyyy")}
-          </p>
+          <div className="flex items-center gap-1 text-xs text-gray-300">
+            <span className="font-bold">Published: </span>
+            <p>{format(new Date(cursorData.createdAt), "MMMM d, yyyy")}</p>
+          </div>
         </div>
         <p className="text-gray-300">{cursorData.description}</p>
       </div>
