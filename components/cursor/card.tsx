@@ -39,9 +39,9 @@ export function CursorCard({ cursor }: CursorCardProps) {
   return (
     <Link
       href={`/cursor/${id}`}
-      className="group block rounded-md p-4 hover:bg-gray-700/20 transition border"
+      className="group block rounded-md p-4 hover:bg-gray-700/20 transition border w-full"
     >
-      <div className="relative aspect-square w-48 overflow-hidden rounded-md bg-gray-800">
+      <div className="relative aspect-square w-full overflow-hidden rounded-md bg-gray-800">
         <Image
           src={previewImage}
           alt={name}
@@ -52,10 +52,10 @@ export function CursorCard({ cursor }: CursorCardProps) {
         />
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between gap-2">
         <h3 className="font-semibold truncate max-w-30">{name}</h3>
 
-        <div className="flex items-center gap-3 text-sm text-gray-300">
+        <div className="flex items-center gap-2 text-xs text-gray-300">
           <span className="flex items-center gap-1">
             <DownloadSimpleIcon size={14} />
             {downloads}
