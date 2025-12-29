@@ -37,7 +37,7 @@ export default async function CursorIdPage({ params }: Props) {
         <CursorIdClient id={id} />
       </div>
       <Separator orientation="vertical" />
-      <RelatedContent />
+      <RelatedContent id={id} />
     </div>
   );
 }
