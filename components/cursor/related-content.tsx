@@ -8,7 +8,6 @@ export default function RelatedContent({ id }: { id: string }) {
     queryKey: ["related-cursors"],
     queryFn: () => api.cursor.related({ id }).get(),
   });
-  console.log(data);
 
   return (
     <aside className="space-y-4">

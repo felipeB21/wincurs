@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 export default function NewestPage() {
   const title = "New Cursors";
   const icon = <SunHorizonIcon size={42} />;
-  const limit = 10;
+  const limit = 12;
   const { data, isLoading, isError } = useQuery({
     queryKey: ["cursors-preview"],
     queryFn: () => api.cursor.desc.get({ query: { limit, offset: 0 } }),
@@ -21,7 +21,7 @@ export default function NewestPage() {
         {icon}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 justify-between w-full">
+      <div className="w-full">
         {isLoading && (
           <div className="flex gap-6 col-span-full">
             <Skeleton className="w-48 h-48" />
@@ -41,7 +41,7 @@ export default function NewestPage() {
         )}
 
         {!isLoading && !isError && (
-          <div className="flex items-center justify-between gap-5">
+          <div className="grid grid-cols-4 gap-5">
             {cursors.map((c) => (
               <CursorCard key={c.id} cursor={c} />
             ))}

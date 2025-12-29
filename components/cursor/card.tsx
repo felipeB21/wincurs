@@ -4,10 +4,16 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   CrownSimpleIcon,
-  DownloadSimpleIcon,
+  DownloadIcon,
   HeartIcon,
+  ArrowUpRightIcon,
 } from "@phosphor-icons/react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 export interface CursorCardProps {
   cursor: {
@@ -37,69 +43,86 @@ export function CursorCard({ cursor }: CursorCardProps) {
   } = cursor;
 
   return (
-    <Link
-      href={`/cursor/${id}`}
-      className="group block rounded-md p-4 hover:bg-gray-700/20 transition border w-full"
-    >
-      <div className="relative aspect-square w-full overflow-hidden rounded-md bg-gray-800">
+    <div className="group w-full relative rounded-xl border border-white/10 bg-gray-900/50 p-3 transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-gray-800/80 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
+      <Link
+        href={`/cursor/${id}`}
+        className="relative block aspect-square w-full overflow-hidden rounded-lg bg-gray-950"
+      >
         <Image
           src={previewImage}
           alt={name}
           fill
-          className="object-contain"
-          sizes="1000px"
-          loading="eager"
+          className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+          sizes="(max-width: 768px) 100vw, 33vw"
         />
-      </div>
-
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <h3 className="font-semibold truncate max-w-30">{name}</h3>
-
-        <div className="flex items-center gap-2 text-xs text-gray-300">
-          <span className="flex items-center gap-1">
-            <DownloadSimpleIcon size={14} />
-            {downloads}
-          </span>
-          <span className="flex items-center gap-1">
-            <HeartIcon size={14} />
-            {likes}
-          </span>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black">
+            View Details <ArrowUpRightIcon size={14} weight="bold" />
+          </div>
         </div>
-      </div>
+      </Link>
 
-      <div
-        className="mt-2 flex items-center gap-2 w-max"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          window.location.href = `/profile/${username}`;
-        }}
-      >
-        <Image
-          src={userImage as string}
-          alt="Avatar"
-          width={32}
-          height={32}
-          className="rounded-full"
-        />
+      <div className="mt-4 px-1">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold tracking-tight text-white transition-colors group-hover:text-primary">
+            {name}
+          </h3>
+          <div className="flex items-center gap-3 text-[11px] font-medium text-gray-400">
+            <span className="flex items-center gap-1">
+              <DownloadIcon size={14} className="text-gray-500" />
+              {downloads.toLocaleString()}
+            </span>
+            <span className="flex items-center gap-1">
+              <HeartIcon size={14} className="text-gray-500" />
+              {likes.toLocaleString()}
+            </span>
+          </div>
+        </div>
 
-        <div className="leading-none">
-          <div className="flex items-center gap-1">
-            <span className="text-sm font-medium">{userName}</span>
+        <hr className="my-3 border-white/5" />
 
-            {userTier === "premium" && (
-              <Tooltip>
-                <TooltipTrigger>
-                  <CrownSimpleIcon size={14} weight="fill" color="#FFD700" />
-                </TooltipTrigger>
-                <TooltipContent>Premium</TooltipContent>
-              </Tooltip>
-            )}
+        <Link
+          href={`/profile/${username}`}
+          className="flex items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-white/5"
+        >
+          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full ring-2 ring-transparent transition-all group-hover:ring-white/10">
+            <Image
+              src={userImage || "/default-avatar.png"}
+              alt={userName}
+              fill
+              className="object-cover"
+            />
           </div>
 
-          <span className="text-xs text-primary font-bold">@{username}</span>
-        </div>
+          <div className="flex min-w-0 flex-col leading-tight">
+            <div className="flex items-center gap-1.5">
+              <span className="truncate text-xs font-semibold text-gray-200">
+                {userName}
+              </span>
+              {userTier === "premium" && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <CrownSimpleIcon
+                        size={12}
+                        weight="fill"
+                        className="text-yellow-400"
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-yellow-400 text-[10px] font-bold text-black"
+                    >
+                      PREMIUM AUTHOR
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+            <span className="text-[10px] text-gray-500">@{username}</span>
+          </div>
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }

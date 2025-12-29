@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { Skeleton } from "../ui/skeleton";
+import { format } from "date-fns";
 
 export default function UserCursor({ username }: { username: string }) {
   const { data, isLoading, isError, error } = useQuery({
@@ -40,6 +41,7 @@ export default function UserCursor({ username }: { username: string }) {
       </p>
     );
   if (isError || data?.error) return <p>Error: {(error as Error).message}</p>;
+  console.log(data);
 
   return (
     <div className="columns-3 gap-3 space-y-3">
@@ -54,14 +56,17 @@ export default function UserCursor({ username }: { username: string }) {
             alt="Preview Image"
             width={400}
             height={400}
-            className="w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]group-hover:brightness-75"
+            className="w-full object-cover transition-transform  group-hover:scale-105 group-hover:brightness-75"
             loading="eager"
           />
-          <div className=" shadow-lg shadow-black/10 pointer-events-none absolute inset-0 flex items-end opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div className=" shadow-lg shadow-black/10 pointer-events-none absolute inset-0 flex opacity-0  group-hover:opacity-100">
             <div className="w-full bg-white/10 backdrop-blur-md px-4 py-3">
-              <h1 className="text-sm font-semibold text-white">
+              <h1 className="text-4xl font-bold text-stone-50">
                 {cursor.name}
               </h1>
+              <span className="text-sm font-medium">
+                Created: {format(cursor.createdAt, "MMM d, yyyy")}
+              </span>
               <p className="text-xs text-white/90 line-clamp-2">
                 {cursor.description}
               </p>

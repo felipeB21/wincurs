@@ -12,7 +12,7 @@ export default function NewCursors() {
   const title = "New Cursors";
   const icon = <SunHorizonIcon size={42} />;
 
-  const limit = 6;
+  const limit = 4;
   const { data, isLoading, isError } = useQuery({
     queryKey: ["cursors-preview"],
     queryFn: () => api.cursor.desc.get({ query: { limit, offset: 0 } }),
@@ -20,13 +20,13 @@ export default function NewCursors() {
   const cursors = data?.data?.cursors ?? [];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full">
       <div className="flex items-center gap-3">
         <h2 className="text-4xl font-bold text-pretty lg:text-6xl">{title}</h2>
         {icon}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 justify-between w-full">
+      <div className="w-full">
         {isLoading && (
           <div className="flex gap-6 col-span-full">
             <Skeleton className="w-48 h-48" />
@@ -46,11 +46,13 @@ export default function NewCursors() {
         )}
 
         {!isLoading && !isError && (
-          <div className="flex items-center justify-between gap-5">
-            {cursors.map((c) => (
-              <CursorCard key={c.id} cursor={c} />
-            ))}
-            <Button className="flex items-center justify-center" asChild>
+          <div className="flex flex-col gap-5">
+            <div className="grid grid-cols-4 gap-5 w-full">
+              {cursors.map((c) => (
+                <CursorCard key={c.id} cursor={c} />
+              ))}
+            </div>
+            <Button className="" asChild>
               <Link href={"/cursor/newest"}>View More</Link>
             </Button>
           </div>

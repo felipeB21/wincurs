@@ -376,6 +376,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       ...c,
       previewImage: await coverService.getSignedUrl(c.previewImage),
     });
+    const baseName = cursorBase[0].name.toLowerCase();
 
     const related = await db
       .select({
@@ -402,7 +403,10 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       .from(cursor)
       .innerJoin(user, eq(cursor.userId, user.id))
       .where(
-        and(eq(cursor.name, cursorBase[0].name), sql`${cursor.id} != ${id}`)
+        and(
+          sql`${cursor.name} ILIKE ${"%" + baseName.split(" ")[0] + "%"}`,
+          sql`${cursor.id} != ${id}`
+        )
       )
       .orderBy(desc(cursor.createdAt))
       .limit(10);
@@ -443,7 +447,6 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
 
     return await Promise.all(fallback.map(mapCursor));
   })
-
   .post("/:id/download", async ({ params }) => {
     const { id } = params as { id: string };
 

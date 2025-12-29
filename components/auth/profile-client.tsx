@@ -9,6 +9,7 @@ import { CrownSimpleIcon, DotsThreeVerticalIcon } from "@phosphor-icons/react";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import SignOut from "./sign-out";
@@ -71,14 +72,23 @@ export default function ProfileClient({
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold">{user.name}</h1>
               {user.tier === "premium" ? (
-                <Tooltip>
-                  <TooltipTrigger>
-                    <CrownSimpleIcon size={28} weight="fill" color="#FFD700" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Premium</p>
-                  </TooltipContent>
-                </Tooltip>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <CrownSimpleIcon
+                        size={28}
+                        weight="fill"
+                        className="text-yellow-400"
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-yellow-400 text-[10px] font-bold text-black"
+                    >
+                      PREMIUM AUTHOR
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               ) : null}
             </div>
             <p className="text-sm text-primary">@{username}</p>

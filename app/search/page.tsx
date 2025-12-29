@@ -39,7 +39,7 @@ async function searchCursors(query: string): Promise<SearchResponse> {
   const { data, error } = await api.cursor.search.get({
     query: {
       q: query,
-      limit: 20,
+      limit: 6,
       offset: 0,
     },
   });
@@ -73,7 +73,7 @@ export default function SearchPage() {
       {isLoading && <p className="mt-5">Searching...</p>}
       {isError && <p className="mt-5">Error searching for cursor</p>}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-5">
+      <div className="grid grid-cols-2 gap-4 mt-5">
         {data?.cursors.map((cursor) => (
           <CursorCard key={cursor.id} cursor={cursor} />
         ))}
