@@ -5,7 +5,8 @@ import { cursor, cursorDownload, cursorLike, user } from "@/db/schema";
 import { getSession } from "@/lib/auth-server";
 import { CoverUploadService } from "@/services/cover";
 import { CursorFileUploadService } from "@/services/cursor";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
+import { Cursor } from "@/interface/ICursor";
 
 type CursorFileType = "cur" | "zip" | "rar";
 
@@ -354,6 +355,95 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       }),
     }
   )
+  .get("/related/:id", async ({ params }) => {
+    const { id } = params as { id: string };
+
+    const coverService = new CoverUploadService();
+
+    const cursorBase = await db
+      .select({
+        id: cursor.id,
+        name: cursor.name,
+      })
+      .from(cursor)
+      .where(eq(cursor.id, id));
+
+    if (cursorBase.length === 0) {
+      return [];
+    }
+
+    const mapCursor = async (c: Cursor) => ({
+      ...c,
+      previewImage: await coverService.getSignedUrl(c.previewImage),
+    });
+
+    const related = await db
+      .select({
+        id: cursor.id,
+        name: cursor.name,
+        previewImage: cursor.previewImage,
+        createdAt: cursor.createdAt,
+        userId: user.id,
+        userName: user.name,
+        username: user.username,
+        userImage: user.image,
+        userTier: user.tier,
+        likes: sql<number>`
+        (select count(*)::int
+         from cursor_like
+         where cursor_like.cursor_id = ${cursor.id})
+      `,
+        downloads: sql<number>`
+        (select count(*)::int
+         from cursor_download
+         where cursor_download.cursor_id = ${cursor.id})
+      `,
+      })
+      .from(cursor)
+      .innerJoin(user, eq(cursor.userId, user.id))
+      .where(
+        and(eq(cursor.name, cursorBase[0].name), sql`${cursor.id} != ${id}`)
+      )
+      .orderBy(desc(cursor.createdAt))
+      .limit(10);
+
+    if (related.length > 0) {
+      return await Promise.all(related.map(mapCursor));
+    }
+
+    const fallback = await db
+      .select({
+        id: cursor.id,
+        name: cursor.name,
+        previewImage: cursor.previewImage,
+        createdAt: cursor.createdAt,
+
+        userId: user.id,
+        userName: user.name,
+        username: user.username,
+        userImage: user.image,
+        userTier: user.tier,
+
+        likes: sql<number>`
+      (select count(*)::int
+       from cursor_like
+       where cursor_like.cursor_id = ${cursor.id})
+    `,
+        downloads: sql<number>`
+      (select count(*)::int
+       from cursor_download
+       where cursor_download.cursor_id = ${cursor.id})
+    `,
+      })
+      .from(cursor)
+      .innerJoin(user, eq(cursor.userId, user.id))
+      .where(sql`${cursor.id} != ${id}`)
+      .orderBy(desc(cursor.createdAt))
+      .limit(5);
+
+    return await Promise.all(fallback.map(mapCursor));
+  })
+
   .post("/:id/download", async ({ params }) => {
     const { id } = params as { id: string };
 
