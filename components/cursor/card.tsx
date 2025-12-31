@@ -14,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { format } from "date-fns";
 
 export interface CursorCardProps {
   cursor: {
@@ -22,6 +23,7 @@ export interface CursorCardProps {
     previewImage: string;
     downloads: number;
     likes: number;
+    createdAt: string;
     username: string;
     userName: string;
     userImage: string | null;
@@ -40,6 +42,7 @@ export function CursorCard({ cursor }: CursorCardProps) {
     userName,
     userImage,
     userTier,
+    createdAt,
   } = cursor;
 
   return (
@@ -64,9 +67,17 @@ export function CursorCard({ cursor }: CursorCardProps) {
 
       <div className="mt-4 px-1">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold tracking-tight text-white transition-colors group-hover:text-primary">
-            {name}
-          </h3>
+          <div>
+            <h3 className="text-sm font-bold tracking-tight text-white transition-colors group-hover:text-primary">
+              {name}
+            </h3>
+            <div className="text-gray-300 text-[11px] flex items-center gap-1">
+              <p>Created on</p>
+              <span className="font-bold">
+                {format(new Date(createdAt), "MMM d, yyyy")}
+              </span>
+            </div>
+          </div>
           <div className="flex items-center gap-3 text-[11px] font-medium text-gray-400">
             <span className="flex items-center gap-1">
               <DownloadIcon size={14} className="text-gray-500" />
