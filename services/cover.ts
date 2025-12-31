@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   S3Client,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
@@ -54,5 +55,14 @@ export class CoverUploadService implements ICoverUploadService {
       expiresIn: expiresInSeconds,
     });
     return url;
+  }
+
+  async deleteCover(key: string): Promise<void> {
+    await this.s3.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.BUCKET_NAME!,
+        Key: key,
+      })
+    );
   }
 }

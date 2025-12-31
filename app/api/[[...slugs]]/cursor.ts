@@ -145,7 +145,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         fileSize: cursor.fileSize,
         checksum: cursor.checksum,
         createdAt: cursor.createdAt,
-
+        userId: user.id,
         userName: user.name,
         username: user.username,
         userImage: user.image,
@@ -497,4 +497,51 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
     });
 
     return { liked: true };
+  })
+  .post("/:id/delete", async ({ params, set }) => {
+    const session = await getSession();
+
+    if (!session?.user?.id) {
+      set.status = 401;
+      return { error: "Unauthorized" };
+    }
+
+    const { id } = params as { id: string };
+    const userId = session.user.id;
+
+    const [c] = await db
+      .select({
+        id: cursor.id,
+        ownerId: cursor.userId,
+        previewImage: cursor.previewImage,
+        fileUrl: cursor.fileUrl,
+      })
+      .from(cursor)
+      .where(eq(cursor.id, id));
+
+    if (!c) {
+      set.status = 404;
+      return { error: "Cursor not found" };
+    }
+
+    if (c.ownerId !== userId) {
+      set.status = 403;
+      return { error: "Forbidden" };
+    }
+
+    const coverService = new CoverUploadService();
+    const fileService = new CursorFileUploadService();
+
+    await Promise.all([
+      coverService.deleteCover(c.previewImage),
+      fileService.deleteFile(c.fileUrl),
+    ]);
+
+    await db.transaction(async (tx) => {
+      await tx.delete(cursorLike).where(eq(cursorLike.cursorId, id));
+      await tx.delete(cursorDownload).where(eq(cursorDownload.cursorId, id));
+      await tx.delete(cursor).where(eq(cursor.id, id));
+    });
+
+    return { success: true };
   });

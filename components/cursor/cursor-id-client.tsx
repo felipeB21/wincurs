@@ -5,9 +5,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import {
+  ArrowLeftIcon,
   CrownSimpleIcon,
   DownloadSimpleIcon,
   HeartIcon,
+  TrashSimpleIcon,
+  WarningCircleIcon,
 } from "@phosphor-icons/react";
 import { Button } from "../ui/button";
 import Link from "next/link";
@@ -15,6 +18,19 @@ import { Cursor } from "@/interface/ICursor";
 import CursorIdSkeleton from "./cursor-id-skeleton";
 import { format } from "date-fns";
 import { Separator } from "../ui/separator";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
 
 interface ElysiaErrorResponse {
   message?: string;
@@ -28,6 +44,8 @@ interface CursorResponse {
 
 export default function CursorIdClient({ id }: { id: string }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const session = authClient.useSession();
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["cursor-id", id],
@@ -72,6 +90,24 @@ export default function CursorIdClient({ id }: { id: string }) {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.cursor({ id }).delete.post();
+      if (res.error) {
+        const errorData = res.error.value as unknown as ElysiaErrorResponse;
+        throw new Error(
+          errorData.message || errorData.summary || "Failed to delete cursor"
+        );
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["cursor-id", id] });
+      router.push("/");
+      router.refresh();
+    },
+  });
+
   const downloadMutation = useMutation({
     mutationFn: async () => {
       const res = await api.cursor({ id }).download.post();
@@ -106,8 +142,20 @@ export default function CursorIdClient({ id }: { id: string }) {
   const cursorData = data.data;
 
   if ("message" in cursorData) {
-    return <p>{cursorData.message}</p>;
+    return (
+      <div className="flex flex-col gap-3 items-center justify-center h-[90dvh]">
+        <h1 className="text-3xl font-bold">{cursorData.message}</h1>
+        <Button asChild>
+          <Link href="/">
+            <ArrowLeftIcon size={16} />
+            Go back home
+          </Link>
+        </Button>
+      </div>
+    );
   }
+
+  const isOwner = session?.data?.user?.id === cursorData.userId;
 
   return (
     <div className="flex flex-col gap-5">
@@ -170,6 +218,45 @@ export default function CursorIdClient({ id }: { id: string }) {
           </Link>
         </div>
         <div className="flex gap-2">
+          {isOwner && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  disabled={deleteMutation.isPending}
+                >
+                  <TrashSimpleIcon size={20} />
+                  <span>
+                    {deleteMutation.isPending ? "Deleting..." : "Delete cursor"}
+                  </span>
+                </Button>
+              </AlertDialogTrigger>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <WarningCircleIcon size={20} />
+                    Delete cursor
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. The cursor and all related
+                    data will be permanently removed.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteMutation.mutate()}
+                    className="bg-destructive text-destructive-foreground"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

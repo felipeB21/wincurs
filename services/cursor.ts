@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   S3Client,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { randomUUID, createHash } from "crypto";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -70,5 +71,14 @@ export class CursorFileUploadService implements ICursorFileUploadService {
       expiresIn: expiresInSeconds,
     });
     return url;
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    await this.s3.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.BUCKET_NAME!,
+        Key: key,
+      })
+    );
   }
 }

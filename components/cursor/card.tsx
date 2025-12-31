@@ -23,7 +23,7 @@ export interface CursorCardProps {
     previewImage: string;
     downloads: number;
     likes: number;
-    createdAt: string;
+    createdAt: Date;
     username: string;
     userName: string;
     userImage: string | null;
