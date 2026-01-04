@@ -447,6 +447,72 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
 
     return await Promise.all(fallback.map(mapCursor));
   })
+  .get(
+    "/popular",
+    async ({ query }) => {
+      const limit = query.limit;
+      const offset = query.offset;
+
+      const cursors = await db
+        .select({
+          id: cursor.id,
+          name: cursor.name,
+          previewImage: cursor.previewImage,
+          createdAt: cursor.createdAt,
+          fileUrl: cursor.fileUrl,
+          userId: user.id,
+          userName: user.name,
+          username: user.username,
+          userImage: user.image,
+          userTier: user.tier,
+          likes: sql<number>`
+          (select count(*)::int
+           from cursor_like
+           where cursor_like.cursor_id = ${cursor.id})
+        `,
+          downloads: sql<number>`
+          (select count(*)::int
+           from cursor_download
+           where cursor_download.cursor_id = ${cursor.id})
+        `,
+        })
+        .from(cursor)
+        .innerJoin(user, eq(cursor.userId, user.id))
+        .orderBy(
+          desc(sql`
+          (
+            (select count(*) from cursor_like where cursor_like.cursor_id = ${cursor.id}) +
+            (select count(*) from cursor_download where cursor_download.cursor_id = ${cursor.id})
+          )
+        `)
+        )
+        .limit(limit)
+        .offset(offset);
+
+      const coverService = new CoverUploadService();
+      const fileService = new CursorFileUploadService();
+
+      const cursorsWithUrls = await Promise.all(
+        cursors.map(async (c) => ({
+          ...c,
+          previewImage: await coverService.getSignedUrl(c.previewImage),
+          fileUrl: await fileService.getSignedUrl(c.fileUrl),
+        }))
+      );
+
+      return {
+        cursors: cursorsWithUrls,
+        hasMore: cursors.length === limit,
+        nextOffset: offset + cursors.length,
+      };
+    },
+    {
+      query: t.Object({
+        limit: t.Number({ default: 20 }),
+        offset: t.Number({ default: 0 }),
+      }),
+    }
+  )
   .post("/:id/download", async ({ params }) => {
     const { id } = params as { id: string };
 

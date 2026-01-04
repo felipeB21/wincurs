@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   CrownSimpleIcon,
-  DownloadIcon,
+  DownloadSimpleIcon,
   HeartIcon,
   ArrowUpRightIcon,
 } from "@phosphor-icons/react";
@@ -57,6 +57,7 @@ export function CursorCard({ cursor }: CursorCardProps) {
           fill
           className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
           sizes="(max-width: 768px) 100vw, 33vw"
+          loading="eager"
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <div className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black">
@@ -80,7 +81,7 @@ export function CursorCard({ cursor }: CursorCardProps) {
           </div>
           <div className="flex items-center gap-3 text-[11px] font-medium text-gray-400">
             <span className="flex items-center gap-1">
-              <DownloadIcon size={14} className="text-gray-500" />
+              <DownloadSimpleIcon size={14} className="text-gray-500" />
               {downloads.toLocaleString()}
             </span>
             <span className="flex items-center gap-1">
@@ -102,6 +103,7 @@ export function CursorCard({ cursor }: CursorCardProps) {
               alt={userName}
               fill
               className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
 

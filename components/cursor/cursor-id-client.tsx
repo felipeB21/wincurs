@@ -290,6 +290,7 @@ export default function CursorIdClient({ id }: { id: string }) {
               </Button>
             </TooltipTrigger>
             <TooltipContent>
+              {!session.data && "Sign in to "}
               {cursorData.likedByUser ? "Unlike" : "Like"}
             </TooltipContent>
           </Tooltip>
