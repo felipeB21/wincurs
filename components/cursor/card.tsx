@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { format } from "date-fns";
+import { useEffect, useState } from "react";
 
 export interface CursorCardProps {
   cursor: {
@@ -45,6 +46,14 @@ export function CursorCard({ cursor }: CursorCardProps) {
     createdAt,
   } = cursor;
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    let raf = 0;
+    raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   return (
     <div className="group w-full relative rounded-xl border border-white/10 bg-gray-900/50 p-3 transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-gray-800/80 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]">
       <Link
@@ -58,6 +67,7 @@ export function CursorCard({ cursor }: CursorCardProps) {
           className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
           sizes="(max-width: 768px) 100vw, 33vw"
           loading="eager"
+          quality={75}
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <div className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black">
@@ -75,7 +85,7 @@ export function CursorCard({ cursor }: CursorCardProps) {
             <div className="text-gray-300 text-[11px] flex items-center gap-1">
               <p>Created on</p>
               <span className="font-bold">
-                {format(new Date(createdAt), "MMM d, yyyy")}
+                {mounted ? format(new Date(createdAt), "MMM d, yyyy") : "---"}
               </span>
             </div>
           </div>

@@ -3,6 +3,7 @@ export interface Cursor {
   name: string;
   previewImage: string;
   createdAt: Date;
+  description: string | null;
   userId: string;
   userName: string;
   username: string;

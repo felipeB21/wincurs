@@ -1,25 +1,18 @@
 "use client";
 
-import { api } from "@/lib/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Image from "next/image";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import {
-  ArrowLeftIcon,
-  CrownSimpleIcon,
-  DownloadSimpleIcon,
-  HeartIcon,
-  TrashSimpleIcon,
-  WarningCircleIcon,
-} from "@phosphor-icons/react";
-import { Button } from "../ui/button";
-import Link from "next/link";
-import { Cursor } from "@/interface/ICursor";
-import CursorIdSkeleton from "./cursor-id-skeleton";
-import { format } from "date-fns";
-import { Separator } from "../ui/separator";
+import { api } from "@/lib/api-client";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { format } from "date-fns";
+import type { ComponentProps, ReactNode } from "react";
+
+// UI Components
+import { Button } from "../ui/button";
+import { Separator } from "../ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,78 +24,71 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
+import CursorIdSkeleton from "./cursor-id-skeleton";
 
-interface ElysiaErrorResponse {
-  message?: string;
-  summary?: string;
-  type?: string;
+import {
+  CrownSimpleIcon,
+  DownloadSimpleIcon,
+  HeartIcon,
+  TrashSimpleIcon,
+  WarningCircleIcon,
+} from "@phosphor-icons/react";
+
+import { Cursor } from "@/interface/ICursor";
+
+interface Props {
+  id: string;
+  initialData?: Cursor;
 }
 
-interface CursorResponse {
-  data: Cursor | { message: string } | null;
-}
-
-export default function CursorIdClient({ id }: { id: string }) {
+export default function CursorIdClient({ id, initialData }: Props) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const session = authClient.useSession();
+  const { data: session } = authClient.useSession();
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["cursor-id", id],
-    queryFn: () => api.cursor({ id }).get(),
+  const { data, isLoading } = useQuery({
+    queryKey: ["cursors", "detail", id],
+    queryFn: async () => {
+      const res = await api.cursor({ id }).get();
+      if (res.error) throw new Error("Failed to fetch");
+      return res.data as Cursor;
+    },
+    initialData: initialData,
   });
 
   const likeMutation = useMutation({
     mutationFn: () => api.cursor({ id }).like.post(),
-
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["cursor-id", id] });
-
-      const previousData = queryClient.getQueryData<CursorResponse>([
-        "cursor-id",
+      await queryClient.cancelQueries({ queryKey: ["cursors", "detail", id] });
+      const previous = queryClient.getQueryData<Cursor>([
+        "cursors",
+        "detail",
         id,
       ]);
 
-      queryClient.setQueryData<CursorResponse>(["cursor-id", id], (old) => {
-        if (!old?.data || "message" in old.data) return old;
-
-        return {
-          ...old,
-          data: {
-            ...old.data,
-            likes: old.data.likedByUser
-              ? old.data.likes - 1
-              : old.data.likes + 1,
-            likedByUser: !old.data.likedByUser,
-          },
-        };
-      });
-
-      return { previousData };
+      if (previous) {
+        queryClient.setQueryData<Cursor>(["cursors", "detail", id], {
+          ...previous,
+          likes: previous.likedByUser ? previous.likes - 1 : previous.likes + 1,
+          likedByUser: !previous.likedByUser,
+        });
+      }
+      return { previous };
     },
-
-    onError: (_err, _vars, context) => {
-      queryClient.setQueryData(["cursor-id", id], context?.previousData);
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["cursors", "detail", id], context.previous);
+      }
     },
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cursor-id", id] });
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["cursors", "detail", id] });
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api.cursor({ id }).delete.post();
-      if (res.error) {
-        const errorData = res.error.value as unknown as ElysiaErrorResponse;
-        throw new Error(
-          errorData.message || errorData.summary || "Failed to delete cursor"
-        );
-      }
-      return true;
-    },
+    mutationFn: () => api.cursor({ id }).delete.post(),
     onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["cursor-id", id] });
+      queryClient.removeQueries({ queryKey: ["cursors", "detail", id] });
       router.push("/");
       router.refresh();
     },
@@ -111,191 +97,200 @@ export default function CursorIdClient({ id }: { id: string }) {
   const downloadMutation = useMutation({
     mutationFn: async () => {
       const res = await api.cursor({ id }).download.post();
-      if (res.error) {
-        const errorData = res.error.value as unknown as ElysiaErrorResponse;
-
-        const errorMessage =
-          errorData.message || errorData.summary || "Failed to download";
-
-        throw new Error(errorMessage);
-      }
+      if (res.error) throw new Error("Download failed");
       return res.data;
     },
-    onSuccess: (data) => {
-      if (data?.fileUrl) {
-        const link = document.createElement("a");
-        link.href = data.fileUrl;
-        link.setAttribute("download", "");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        queryClient.invalidateQueries({ queryKey: ["cursor-id", id] });
+    onSuccess: (resData) => {
+      if (resData?.fileUrl) {
+        const a = document.createElement("a");
+        a.href = resData.fileUrl;
+        a.download = "";
+        a.click();
+        queryClient.invalidateQueries({ queryKey: ["cursors", "detail", id] });
       }
     },
   });
 
-  if (isLoading) return <CursorIdSkeleton />;
-  if (isError) return <p>Error: {(error as Error)?.message}</p>;
-  if (!data?.data) return <p>No data returned</p>;
+  if (isLoading && !initialData) return <CursorIdSkeleton />;
+  if (!data) return <NotFoundState />;
 
-  const cursorData = data.data;
-
-  if ("message" in cursorData) {
-    return (
-      <div className="flex flex-col gap-3 items-center justify-center h-[90dvh]">
-        <h1 className="text-3xl font-bold">{cursorData.message}</h1>
-        <Button asChild>
-          <Link href="/">
-            <ArrowLeftIcon size={16} />
-            Go back home
-          </Link>
-        </Button>
-      </div>
-    );
-  }
-
-  const isOwner = session?.data?.user?.id === cursorData.userId;
+  const isOwner = session?.user?.id === data.userId;
 
   return (
-    <div className="flex flex-col gap-5">
-      <Image
-        src={cursorData.previewImage}
-        alt={cursorData.name}
-        width={1000}
-        height={1000}
-        className="w-auto h-100 object-contain"
-        loading="eager"
-      />
-      <div>
-        <div className="flex items-center gap-5">
-          <h1 className="text-3xl font-bold">{cursorData.name}</h1>
-          <Separator orientation="vertical" />
-          <div className="flex items-center gap-1 text-xs text-gray-300">
-            <span className="font-bold">Published: </span>
-            <p>{format(new Date(cursorData.createdAt), "MMMM d, yyyy")}</p>
-          </div>
-        </div>
-        <p className="text-gray-300">{cursorData.description}</p>
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-muted/30">
+        <Image
+          src={data.previewImage}
+          alt={data.name}
+          fill
+          className="object-contain p-8"
+          priority
+        />
       </div>
-      <div className="flex items-end justify-between">
-        <div className="flex flex-col gap-2">
-          <p className="text-xs text-gray-300 font-bold">Created by</p>
-          <Link
-            href={`/profile/${cursorData.username}`}
-            className="w-max flex items-center gap-2"
-          >
-            <Image
-              src={cursorData.userImage as string}
-              alt="Avatar"
-              width={32}
-              height={32}
-              className="rounded-full w-8 h-8"
-              loading="eager"
-            />
-            <div className="flex flex-col items-start leading-none">
-              <div className="flex items-center gap-1">
-                <h5 className="text-sm m-0">{cursorData.userName}</h5>
-                {cursorData.userTier === "premium" ? (
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <CrownSimpleIcon
-                        size={14}
-                        weight="fill"
-                        color="#FFD700"
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Premium</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ) : null}
-              </div>
-              <span className="text-[10px] text-primary font-bold m-0">
-                @{cursorData.username}
-              </span>
-            </div>
-          </Link>
+
+      <header className="space-y-2">
+        <div className="flex flex-wrap items-center gap-4">
+          <h1 className="text-4xl font-bold tracking-tight">{data.name}</h1>
+          <Separator orientation="vertical" className="h-6 hidden sm:block" />
+          <p className="text-sm text-muted-foreground">
+            Published {format(new Date(data.createdAt), "PPP")}
+          </p>
         </div>
-        <div className="flex gap-2">
+        <p className="text-lg text-muted-foreground max-w-2xl">
+          {data.description}
+        </p>
+      </header>
+
+      <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y">
+        <Link
+          href={`/profile/${data.username}`}
+          className="group flex items-center gap-3"
+        >
+          <Image
+            src={data.userImage ?? "/fallback-avatar.png"}
+            alt={data.userName}
+            width={44}
+            height={44}
+            className="rounded-full ring-2 ring-transparent group-hover:ring-primary/50 transition-all"
+          />
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold">{data.userName}</span>
+              {data.userTier === "premium" && (
+                <CrownSimpleIcon
+                  size={16}
+                  weight="fill"
+                  className="text-yellow-500"
+                />
+              )}
+            </div>
+            <span className="text-xs text-primary font-medium">
+              @{data.username}
+            </span>
+          </div>
+        </Link>
+
+        <div className="flex items-center gap-2">
           {isOwner && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="destructive"
-                  disabled={deleteMutation.isPending}
-                >
-                  <TrashSimpleIcon size={20} />
-                  <span>
-                    {deleteMutation.isPending ? "Deleting..." : "Delete cursor"}
-                  </span>
-                </Button>
-              </AlertDialogTrigger>
-
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="flex items-center gap-2">
-                    <WarningCircleIcon size={20} />
-                    Delete cursor
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. The cursor and all related
-                    data will be permanently removed.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => deleteMutation.mutate()}
-                    className="bg-destructive text-destructive-foreground"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+              onDelete={() => deleteMutation.mutate()}
+              isPending={deleteMutation.isPending}
+            />
           )}
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                onClick={() => downloadMutation.mutate()}
-                disabled={downloadMutation.isPending}
-              >
-                <DownloadSimpleIcon
-                  size={20}
-                  className={downloadMutation.isPending ? "animate-pulse" : ""}
-                />
-                {cursorData.downloads}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{downloadMutation.isPending ? "Preparing..." : "Download"}</p>
-            </TooltipContent>
-          </Tooltip>
+          <ActionButton
+            onClick={() => downloadMutation.mutate()}
+            icon={
+              <DownloadSimpleIcon
+                size={20}
+                className={downloadMutation.isPending ? "animate-bounce" : ""}
+              />
+            }
+            label={data.downloads.toString()}
+            tooltip="Download Cursor"
+            disabled={downloadMutation.isPending}
+          />
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={cursorData.likedByUser ? "default" : "outline"}
-                onClick={() => likeMutation.mutate()}
-              >
-                <HeartIcon
-                  weight={cursorData.likedByUser ? "fill" : "regular"}
-                  size={20}
-                />
-                {cursorData.likes}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {!session.data && "Sign in to "}
-              {cursorData.likedByUser ? "Unlike" : "Like"}
-            </TooltipContent>
-          </Tooltip>
+          <ActionButton
+            onClick={() => likeMutation.mutate()}
+            icon={
+              <HeartIcon
+                size={20}
+                weight={data.likedByUser ? "fill" : "regular"}
+              />
+            }
+            label={data.likes.toString()}
+            tooltip={data.likedByUser ? "Unlike" : "Like"}
+            variant={data.likedByUser ? "default" : "outline"}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+type ActionButtonProps = {
+  onClick?: ComponentProps<typeof Button>["onClick"];
+  icon: ReactNode;
+  label: string | number;
+  tooltip?: ReactNode;
+  variant?: ComponentProps<typeof Button>["variant"];
+  disabled?: ComponentProps<typeof Button>["disabled"];
+};
+
+function ActionButton({
+  onClick,
+  icon,
+  label,
+  tooltip,
+  variant = "outline",
+  disabled,
+}: ActionButtonProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant={variant}
+          onClick={onClick}
+          disabled={disabled}
+          className="gap-2"
+        >
+          {icon}
+          <span>{label}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{tooltip}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function DeleteDialog({
+  onDelete,
+  isPending,
+}: {
+  onDelete: () => void;
+  isPending: boolean;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive" disabled={isPending} className="gap-2">
+          <TrashSimpleIcon size={20} />
+          <span className="hidden sm:inline">Delete</span>
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <WarningCircleIcon size={20} className="text-destructive" />
+            Are you absolutely sure?
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the
+            cursor.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onDelete}
+            className="bg-destructive text-white hover:bg-destructive/90"
+          >
+            Confirm Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function NotFoundState() {
+  return (
+    <div className="flex flex-col gap-4 items-center justify-center min-h-[60vh]">
+      <h2 className="text-2xl font-bold">Cursor not found</h2>
+      <Button asChild variant="link">
+        <Link href="/">Go back home</Link>
+      </Button>
     </div>
   );
 }
