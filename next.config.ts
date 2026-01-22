@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "amzn-s3-wincurs.s3.us-east-1.amazonaws.com",
+        hostname: "dh0xanzpb2e1h.cloudfront.net",
       },
       { hostname: "media4.giphy.com" },
     ],

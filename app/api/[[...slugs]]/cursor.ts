@@ -6,7 +6,6 @@ import { getSession } from "@/lib/auth-server";
 import { CoverUploadService } from "@/services/cover";
 import { CursorFileUploadService } from "@/services/cursor";
 import { eq, desc, sql, and } from "drizzle-orm";
-import { Cursor } from "@/interface/ICursor";
 
 type CursorFileType = "cur" | "zip" | "rar";
 
@@ -15,6 +14,12 @@ function resolveFileType(mime: string): CursorFileType {
   if (mime.includes("rar")) return "rar";
   return "cur";
 }
+
+const getFullImageUrl = (key: string | null) =>
+  key ? `${process.env.CLOUDFRONT_URL}/${key}` : null;
+
+const getFullFileUrl = (key: string | null) =>
+  key ? `${process.env.CLOUDFRONT_URL}/${key}` : null;
 
 export const cursorRoute = new Elysia({ prefix: "/cursor" })
   .post(
@@ -42,14 +47,14 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       const coverKey = await coverService.saveCover(
         userId,
         coverBuffer,
-        cover.type
+        cover.type,
       );
 
       const fileBuffer = Buffer.from(await file.arrayBuffer());
       const fileResult = await fileService.saveFile(
         userId,
         fileBuffer,
-        file.type
+        file.type,
       );
 
       const cursorId = randomUUID();
@@ -70,8 +75,8 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       return {
         id: cursorId,
         name,
-        previewImage: coverKey,
-        fileUrl: fileResult.key,
+        previewImage: getFullImageUrl(coverKey),
+        fileUrl: getFullFileUrl(fileResult.key),
       };
     },
     {
@@ -81,7 +86,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         cover: t.File(),
         file: t.File(),
       }),
-    }
+    },
   )
   .get("/user/:username", async ({ params, set }) => {
     const { username } = params as { username: string };
@@ -115,16 +120,11 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
 
     if (userCursors.length === 0) return { message: "User has no cursors yet" };
 
-    const coverService = new CoverUploadService();
-    const fileService = new CursorFileUploadService();
-
-    const cursorsWithUrls = await Promise.all(
-      userCursors.map(async (c) => ({
-        ...c,
-        previewImage: await coverService.getSignedUrl(c.previewImage),
-        fileUrl: await fileService.getSignedUrl(c.fileUrl),
-      }))
-    );
+    const cursorsWithUrls = userCursors.map((c) => ({
+      ...c,
+      previewImage: getFullImageUrl(c.previewImage),
+      fileUrl: getFullFileUrl(c.fileUrl),
+    }));
 
     return { cursors: cursorsWithUrls };
   })
@@ -173,19 +173,14 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       .where(eq(cursor.id, id))
       .groupBy(cursor.id, user.id);
 
-    if (rows.length === 0) {
-      return { message: "Cursor not found" };
-    }
+    if (rows.length === 0) return { message: "Cursor not found" };
 
     const c = rows[0];
 
-    const coverService = new CoverUploadService();
-    const fileService = new CursorFileUploadService();
-
     return {
       ...c,
-      previewImage: await coverService.getSignedUrl(c.previewImage),
-      fileUrl: await fileService.getSignedUrl(c.fileUrl),
+      previewImage: getFullImageUrl(c.previewImage),
+      fileUrl: getFullFileUrl(c.fileUrl),
     };
   })
   .get(
@@ -221,14 +216,10 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         .limit(limit)
         .offset(offset);
 
-      const coverService = new CoverUploadService();
-
-      const cursorsWithUrls = await Promise.all(
-        rows.map(async (c) => ({
-          ...c,
-          previewImage: await coverService.getSignedUrl(c.previewImage),
-        }))
-      );
+      const cursorsWithUrls = rows.map((c) => ({
+        ...c,
+        previewImage: getFullImageUrl(c.previewImage),
+      }));
 
       return {
         cursors: cursorsWithUrls,
@@ -241,7 +232,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 6 }),
         offset: t.Number({ default: 0 }),
       }),
-    }
+    },
   )
   .get(
     "/search",
@@ -281,14 +272,10 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         .limit(limit)
         .offset(offset);
 
-      const coverService = new CoverUploadService();
-
-      const cursorsWithUrls = await Promise.all(
-        rows.map(async (c) => ({
-          ...c,
-          previewImage: await coverService.getSignedUrl(c.previewImage),
-        }))
-      );
+      const cursorsWithUrls = rows.map((c) => ({
+        ...c,
+        previewImage: getFullImageUrl(c.previewImage),
+      }));
 
       return {
         cursors: cursorsWithUrls,
@@ -302,7 +289,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 10 }),
         offset: t.Number({ default: 0 }),
       }),
-    }
+    },
   )
   .get(
     "/most-liked",
@@ -331,16 +318,11 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         .limit(limit)
         .offset(offset);
 
-      const coverService = new CoverUploadService();
-      const fileService = new CursorFileUploadService();
-
-      const cursorsWithUrls = await Promise.all(
-        rows.map(async (c) => ({
-          ...c,
-          previewImage: await coverService.getSignedUrl(c.previewImage),
-          fileUrl: await fileService.getSignedUrl(c.fileUrl),
-        }))
-      );
+      const cursorsWithUrls = rows.map((c) => ({
+        ...c,
+        previewImage: getFullImageUrl(c.previewImage),
+        fileUrl: getFullFileUrl(c.fileUrl),
+      }));
 
       return {
         cursors: cursorsWithUrls,
@@ -353,12 +335,10 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 20 }),
         offset: t.Number({ default: 0 }),
       }),
-    }
+    },
   )
   .get("/related/:id", async ({ params }) => {
     const { id } = params as { id: string };
-
-    const coverService = new CoverUploadService();
 
     const cursorBase = await db
       .select({
@@ -372,9 +352,9 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       return [];
     }
 
-    const mapCursor = async (c: Cursor) => ({
+    const mapCursor = (c: any) => ({
       ...c,
-      previewImage: await coverService.getSignedUrl(c.previewImage),
+      previewImage: getFullImageUrl(c.previewImage),
     });
     const baseName = cursorBase[0].name.toLowerCase();
 
@@ -405,8 +385,8 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       .where(
         and(
           sql`${cursor.name} ILIKE ${"%" + baseName.split(" ")[0] + "%"}`,
-          sql`${cursor.id} != ${id}`
-        )
+          sql`${cursor.id} != ${id}`,
+        ),
       )
       .orderBy(desc(cursor.createdAt))
       .limit(10);
@@ -484,21 +464,16 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
             (select count(*) from cursor_like where cursor_like.cursor_id = ${cursor.id}) +
             (select count(*) from cursor_download where cursor_download.cursor_id = ${cursor.id})
           )
-        `)
+        `),
         )
         .limit(limit)
         .offset(offset);
 
-      const coverService = new CoverUploadService();
-      const fileService = new CursorFileUploadService();
-
-      const cursorsWithUrls = await Promise.all(
-        cursors.map(async (c) => ({
-          ...c,
-          previewImage: await coverService.getSignedUrl(c.previewImage),
-          fileUrl: await fileService.getSignedUrl(c.fileUrl),
-        }))
-      );
+      const cursorsWithUrls = cursors.map((c) => ({
+        ...c,
+        previewImage: getFullImageUrl(c.previewImage),
+        fileUrl: getFullFileUrl(c.fileUrl),
+      }));
 
       return {
         cursors: cursorsWithUrls,
@@ -511,10 +486,10 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 20 }),
         offset: t.Number({ default: 0 }),
       }),
-    }
+    },
   )
   .post("/:id/download", async ({ params }) => {
-    const { id } = params as { id: string };
+    const { id } = params;
 
     const [c] = await db
       .select({ fileUrl: cursor.fileUrl })
@@ -523,15 +498,15 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
 
     if (!c) return { error: "Cursor not found" };
 
-    await db.insert(cursorDownload).values({
-      id: randomUUID(),
-      cursorId: id,
-    });
-
-    const fileService = new CursorFileUploadService();
+    db.insert(cursorDownload)
+      .values({
+        id: randomUUID(),
+        cursorId: id,
+      })
+      .catch(console.error);
 
     return {
-      fileUrl: await fileService.getSignedUrl(c.fileUrl),
+      fileUrl: getFullFileUrl(c.fileUrl),
     };
   })
   .post("/:id/like", async ({ params, set }) => {
@@ -572,42 +547,40 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       return { error: "Unauthorized" };
     }
 
-    const { id } = params as { id: string };
+    const { id } = params;
     const userId = session.user.id;
 
-    const [c] = await db
-      .select({
-        id: cursor.id,
-        ownerId: cursor.userId,
-        previewImage: cursor.previewImage,
-        fileUrl: cursor.fileUrl,
-      })
-      .from(cursor)
-      .where(eq(cursor.id, id));
+    const [c] = await db.select().from(cursor).where(eq(cursor.id, id));
 
     if (!c) {
       set.status = 404;
-      return { error: "Cursor not found" };
+      return { error: "Cursor no encontrado" };
     }
 
-    if (c.ownerId !== userId) {
+    if (c.userId !== userId) {
       set.status = 403;
-      return { error: "Forbidden" };
+      return { error: "No tienes permiso para borrar este cursor" };
     }
 
-    const coverService = new CoverUploadService();
-    const fileService = new CursorFileUploadService();
+    try {
+      await db.transaction(async (tx) => {
+        await tx.delete(cursorLike).where(eq(cursorLike.cursorId, id));
+        await tx.delete(cursorDownload).where(eq(cursorDownload.cursorId, id));
+        await tx.delete(cursor).where(eq(cursor.id, id));
+      });
 
-    await Promise.all([
-      coverService.deleteCover(c.previewImage),
-      fileService.deleteFile(c.fileUrl),
-    ]);
+      const coverService = new CoverUploadService();
+      const fileService = new CursorFileUploadService();
 
-    await db.transaction(async (tx) => {
-      await tx.delete(cursorLike).where(eq(cursorLike.cursorId, id));
-      await tx.delete(cursorDownload).where(eq(cursorDownload.cursorId, id));
-      await tx.delete(cursor).where(eq(cursor.id, id));
-    });
+      Promise.all([
+        coverService.deleteCover(c.previewImage),
+        fileService.deleteFile(c.fileUrl),
+      ]).catch((err) => console.error("Error borrando archivos físicos:", err));
 
-    return { success: true };
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      set.status = 500;
+      return { error: "Error al eliminar el cursor" };
+    }
   });

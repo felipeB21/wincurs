@@ -2,11 +2,9 @@ import type { ICursorFileUploadService } from "@/interface/ICursorUpload";
 import {
   PutObjectCommand,
   S3Client,
-  GetObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { randomUUID, createHash } from "crypto";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const FILE_MIME_TO_EXT: Record<string, string> = {
   "image/x-icon": "cur",
@@ -35,7 +33,7 @@ export class CursorFileUploadService implements ICursorFileUploadService {
   async saveFile(
     userId: string,
     file: Buffer,
-    mimeType: string
+    mimeType: string,
   ): Promise<{ key: string; size: string; checksum: string }> {
     const ext = FILE_MIME_TO_EXT[mimeType];
     if (!ext) throw new Error("Invalid cursor file type");
@@ -51,7 +49,7 @@ export class CursorFileUploadService implements ICursorFileUploadService {
         Key: key,
         Body: file,
         ContentType: mimeType,
-      })
+      }),
     );
 
     return {
@@ -61,24 +59,12 @@ export class CursorFileUploadService implements ICursorFileUploadService {
     };
   }
 
-  async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
-    const command = new GetObjectCommand({
-      Bucket: process.env.BUCKET_NAME!,
-      Key: key,
-    });
-
-    const url = await getSignedUrl(this.s3, command, {
-      expiresIn: expiresInSeconds,
-    });
-    return url;
-  }
-
   async deleteFile(key: string): Promise<void> {
     await this.s3.send(
       new DeleteObjectCommand({
         Bucket: process.env.BUCKET_NAME!,
         Key: key,
-      })
+      }),
     );
   }
 }

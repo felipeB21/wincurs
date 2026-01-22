@@ -2,10 +2,8 @@ import type { ICoverUploadService } from "@/interface/ICoverUpload";
 import {
   PutObjectCommand,
   S3Client,
-  GetObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
 const MIME_TO_EXT: Record<string, string> = {
@@ -26,7 +24,7 @@ export class CoverUploadService implements ICoverUploadService {
   async saveCover(
     userId: string,
     file: Buffer,
-    mimeType: string
+    mimeType: string,
   ): Promise<string> {
     const ext = MIME_TO_EXT[mimeType];
     if (!ext) throw new Error("Invalid image type");
@@ -39,22 +37,10 @@ export class CoverUploadService implements ICoverUploadService {
         Key: key,
         Body: file,
         ContentType: mimeType,
-      })
+      }),
     );
 
     return key;
-  }
-
-  async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
-    const command = new GetObjectCommand({
-      Bucket: process.env.BUCKET_NAME!,
-      Key: key,
-    });
-
-    const url = await getSignedUrl(this.s3, command, {
-      expiresIn: expiresInSeconds,
-    });
-    return url;
   }
 
   async deleteCover(key: string): Promise<void> {
@@ -62,7 +48,7 @@ export class CoverUploadService implements ICoverUploadService {
       new DeleteObjectCommand({
         Bucket: process.env.BUCKET_NAME!,
         Key: key,
-      })
+      }),
     );
   }
 }

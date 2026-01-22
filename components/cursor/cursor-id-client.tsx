@@ -123,6 +123,7 @@ export default function CursorIdClient({ id, initialData }: Props) {
           src={data.previewImage}
           alt={data.name}
           fill
+          sizes="(max-width: 768px) 100vw, 33vw"
           className="object-contain p-8"
           priority
         />
