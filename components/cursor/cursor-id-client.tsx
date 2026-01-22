@@ -9,7 +9,6 @@ import Link from "next/link";
 import { format } from "date-fns";
 import type { ComponentProps, ReactNode } from "react";
 
-// UI Components
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";

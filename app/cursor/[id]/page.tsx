@@ -11,7 +11,6 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-// 1. Memorizar la petición para que metadata y la página compartan el mismo recurso
 const getCursor = cache(async (id: string) => {
   const res = await api.cursor({ id }).get();
   const cursor = res.data;
@@ -44,10 +43,8 @@ export default async function CursorIdPage({ params }: Props) {
   if (!cursor) notFound();
 
   return (
-    // 3. Grid responsivo (en móviles el sidebar pasa abajo)
     <div className="flex flex-col lg:grid lg:grid-cols-[1fr_auto_320px] gap-6 h-full">
       <main className="min-w-0 flex-1">
-        {/* Pasamos los datos ya obtenidos al cliente para evitar un segundo fetch en el cliente si es posible */}
         <CursorIdClient id={id} initialData={cursor} />
       </main>
 

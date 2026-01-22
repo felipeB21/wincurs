@@ -61,7 +61,7 @@ export function CursorCard({ cursor }: CursorCardProps) {
         className="relative block aspect-square w-full overflow-hidden rounded-lg bg-gray-950"
       >
         <Image
-          src={previewImage}
+          src={previewImage || ""}
           alt={name}
           fill
           className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
