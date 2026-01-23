@@ -8,7 +8,7 @@ import { format } from "date-fns";
 
 export default function UserCursor({ username }: { username: string }) {
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["user"],
+    queryKey: ["user-cursors", username],
     queryFn: async () => {
       const res = await api.cursor.user({ username }).get();
       return res.data;
@@ -40,7 +40,7 @@ export default function UserCursor({ username }: { username: string }) {
         {data.message}.
       </p>
     );
-  if (isError || data?.error) return <p>Error: {(error as Error).message}</p>;
+  if (isError) return <p>Error: {(error as Error).message}</p>;
   console.log(data);
 
   return (
@@ -51,14 +51,20 @@ export default function UserCursor({ username }: { username: string }) {
           href={`/cursor/${cursor.id}`}
           className="group relative block overflow-hidden rounded-xl border border-white/20 shadow-lg shadow-black/10"
         >
-          <Image
-            src={cursor.previewImage}
-            alt="Preview Image"
-            width={400}
-            height={400}
-            className="w-full object-cover transition-transform  group-hover:scale-105 group-hover:brightness-75"
-            loading="eager"
-          />
+          {cursor.previewImage ? (
+            <Image
+              src={cursor.previewImage}
+              alt="Preview Image"
+              width={400}
+              height={400}
+              className="w-full object-cover transition-transform  group-hover:scale-105 group-hover:brightness-75"
+              loading="eager"
+            />
+          ) : (
+            <div className="w-full aspect-square bg-white/10 flex items-center justify-center">
+              <span className="text-white/50">No Preview</span>
+            </div>
+          )}
           <div className=" shadow-lg shadow-black/10 pointer-events-none absolute inset-0 flex opacity-0  group-hover:opacity-100">
             <div className="w-full bg-white/10 backdrop-blur-md px-4 py-3">
               <h1 className="text-4xl font-bold text-stone-50">

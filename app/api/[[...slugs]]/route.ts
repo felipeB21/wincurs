@@ -1,44 +1,14 @@
 import { Elysia } from "elysia";
-import { db } from "@/db";
-import { user } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { cursorRoute } from "./cursor";
-import { cors } from "@elysiajs/cors";
+import { apiRoutes } from "./routes";
 
-export const app = new Elysia({ prefix: "/api" })
-  .use(
-    cors({
-      credentials: true,
-      origin: [
-        "https://inextricable-stefanie-philately.ngrok-free.dev/",
-        "http://localhost:3000",
-      ],
-    })
-  )
-  .get("/profile/:username", async ({ params, set }) => {
-    const { username } = params;
-
-    const result = await db
-      .select({
-        name: user.name,
-        username: user.username,
-        image: user.image,
-        tier: user.tier,
-      })
-      .from(user)
-      .where(eq(user.username, username))
-      .limit(1);
-
-    if (result.length === 0) {
-      set.status = 404;
-      return { error: "User not found" };
-    }
-
-    return result[0];
-  })
-  .use(cursorRoute);
+// Re-export the composed app for Eden type inference
+export const app = new Elysia().use(apiRoutes);
 
 export type App = typeof app;
 
+// HTTP method handlers
 export const GET = app.fetch;
 export const POST = app.fetch;
+export const PUT = app.fetch;
+export const DELETE = app.fetch;
+export const PATCH = app.fetch;

@@ -1,8 +1,8 @@
 "use client";
 
 import { SunHorizonIcon } from "@phosphor-icons/react";
-import { api } from "@/lib/api-client";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { cursorKeys, fetchCursors } from "@/features/cursor";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
@@ -11,11 +11,8 @@ import { Suspense } from "react";
 
 function useCursorsPreview(limit = 4) {
   return useSuspenseQuery({
-    queryKey: ["cursors", "preview", limit],
-    queryFn: async () => {
-      const res = await api.cursor.desc.get({ query: { limit, offset: 0 } });
-      return res.data?.cursors ?? [];
-    },
+    queryKey: cursorKeys.preview(limit),
+    queryFn: () => fetchCursors({ limit, offset: 0 }),
   });
 }
 
@@ -39,7 +36,8 @@ export default function NewCursors() {
 }
 
 function CursorsList() {
-  const { data: cursors } = useCursorsPreview();
+  const { data } = useCursorsPreview();
+  const cursors = data?.cursors ?? [];
 
   if (cursors.length === 0) {
     return <p className="text-sm text-gray-300">No cursors yet.</p>;
@@ -68,3 +66,4 @@ function CursorsSkeleton() {
     </div>
   );
 }
+

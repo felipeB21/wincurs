@@ -1,19 +1,17 @@
 "use client";
 
-import { api } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
+import { cursorKeys, fetchRelatedCursors } from "@/features/cursor";
 import { CursorCard } from "./card";
 import { Skeleton } from "../ui/skeleton";
 
 export default function RelatedContent({ id }: { id: string }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["cursors", "related", id],
-    queryFn: () => api.cursor.related({ id }).get(),
+  const { data: relatedCursors = [], isLoading } = useQuery({
+    queryKey: cursorKeys.related(id),
+    queryFn: () => fetchRelatedCursors(id),
     enabled: !!id,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
-
-  const relatedCursors = data?.data ?? [];
 
   return (
     <aside className="space-y-4">
@@ -51,3 +49,4 @@ function RelatedSkeletons() {
     </>
   );
 }
+

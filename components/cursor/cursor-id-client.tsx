@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
+import { cursorKeys, fetchCursor } from "@/features/cursor";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -33,40 +34,39 @@ import {
   WarningCircleIcon,
 } from "@phosphor-icons/react";
 
-import { Cursor } from "@/interface/ICursor";
+import type { Cursor } from "@/interface/ICursor";
 
 interface Props {
   id: string;
-  initialData?: Cursor;
 }
 
-export default function CursorIdClient({ id, initialData }: Props) {
+export default function CursorIdClient({ id }: Props) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: session } = authClient.useSession();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["cursors", "detail", id],
-    queryFn: async () => {
-      const res = await api.cursor({ id }).get();
-      if (res.error) throw new Error("Failed to fetch");
-      return res.data as Cursor;
-    },
-    initialData: initialData,
+    queryKey: cursorKeys.detail(id),
+    queryFn: () => fetchCursor(id),
   });
 
   const likeMutation = useMutation({
-    mutationFn: () => api.cursor({ id }).like.post(),
+    mutationFn: async () => {
+      const { data, error } = await api.cursor({ id }).like.post();
+      if (error) throw error;
+      return data;
+    },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["cursors", "detail", id] });
-      const previous = queryClient.getQueryData<Cursor>([
-        "cursors",
-        "detail",
-        id,
-      ]);
+      if (!session) {
+        router.push("/sign-in");
+        throw new Error("Unauthorized");
+      }
+
+      await queryClient.cancelQueries({ queryKey: cursorKeys.detail(id) });
+      const previous = queryClient.getQueryData<Cursor>(cursorKeys.detail(id));
 
       if (previous) {
-        queryClient.setQueryData<Cursor>(["cursors", "detail", id], {
+        queryClient.setQueryData<Cursor>(cursorKeys.detail(id), {
           ...previous,
           likes: previous.likedByUser ? previous.likes - 1 : previous.likes + 1,
           likedByUser: !previous.likedByUser,
@@ -76,18 +76,22 @@ export default function CursorIdClient({ id, initialData }: Props) {
     },
     onError: (_, __, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(["cursors", "detail", id], context.previous);
+        queryClient.setQueryData(cursorKeys.detail(id), context.previous);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["cursors", "detail", id] });
+      queryClient.invalidateQueries({ queryKey: cursorKeys.detail(id) });
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => api.cursor({ id }).delete.post(),
+    mutationFn: async () => {
+      const { data, error } = await api.cursor({ id }).delete.post();
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ["cursors", "detail", id] });
+      queryClient.removeQueries({ queryKey: cursorKeys.detail(id) });
       router.push("/");
       router.refresh();
     },
@@ -105,12 +109,12 @@ export default function CursorIdClient({ id, initialData }: Props) {
         a.href = resData.fileUrl;
         a.download = "";
         a.click();
-        queryClient.invalidateQueries({ queryKey: ["cursors", "detail", id] });
+        queryClient.invalidateQueries({ queryKey: cursorKeys.detail(id) });
       }
     },
   });
 
-  if (isLoading && !initialData) return <CursorIdSkeleton />;
+  if (isLoading) return <CursorIdSkeleton />;
   if (!data) return <NotFoundState />;
 
   const isOwner = session?.user?.id === data.userId;
@@ -122,9 +126,9 @@ export default function CursorIdClient({ id, initialData }: Props) {
           src={data.previewImage}
           alt={data.name}
           fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-contain p-8"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 50vw"
           priority
+          className="object-contain"
         />
       </div>
 
@@ -136,12 +140,10 @@ export default function CursorIdClient({ id, initialData }: Props) {
             Published {format(new Date(data.createdAt), "PPP")}
           </p>
         </div>
-        <p className="text-lg text-muted-foreground max-w-2xl">
-          {data.description}
-        </p>
+        <p className="text-muted-foreground w-full">{data.description}</p>
       </header>
-
-      <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y">
+      <Separator />
+      <div className="flex flex-wrap items-center justify-between gap-4 py-4">
         <Link
           href={`/profile/${data.username}`}
           className="group flex items-center gap-3"

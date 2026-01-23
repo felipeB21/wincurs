@@ -13,6 +13,10 @@ const FILE_MIME_TO_EXT: Record<string, string> = {
   "application/x-zip-compressed": "zip",
   "application/octet-stream": "zip",
   "application/x-rar-compressed": "rar",
+  "application/x-rar": "rar",
+  "application/vnd.rar": "rar",
+  "application/rar": "rar",
+  "application/x-compressed": "rar",
 };
 
 export class CursorFileUploadService implements ICursorFileUploadService {
@@ -36,7 +40,7 @@ export class CursorFileUploadService implements ICursorFileUploadService {
     mimeType: string,
   ): Promise<{ key: string; size: string; checksum: string }> {
     const ext = FILE_MIME_TO_EXT[mimeType];
-    if (!ext) throw new Error("Invalid cursor file type");
+    if (!ext) throw new Error(`Invalid cursor file type: ${mimeType}`);
 
     if (!CursorFileUploadService.isValidFileSize(file.byteLength))
       throw new Error("File exceeds 20MB limit");

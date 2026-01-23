@@ -6,12 +6,13 @@ import { getSession } from "@/lib/auth-server";
 import { CoverUploadService } from "@/services/cover";
 import { CursorFileUploadService } from "@/services/cursor";
 import { eq, desc, sql, and } from "drizzle-orm";
+import { AppError } from "../middleware/error-handler";
 
 type CursorFileType = "cur" | "zip" | "rar";
 
 function resolveFileType(mime: string): CursorFileType {
   if (mime.includes("zip")) return "zip";
-  if (mime.includes("rar")) return "rar";
+  if (mime.includes("rar") || mime.includes("x-compressed")) return "rar";
   return "cur";
 }
 
@@ -21,23 +22,27 @@ const getFullImageUrl = (key: string | null) =>
 const getFullFileUrl = (key: string | null) =>
   key ? `${process.env.CLOUDFRONT_URL}/${key}` : null;
 
-export const cursorRoute = new Elysia({ prefix: "/cursor" })
+export const cursorRoutes = new Elysia({ prefix: "/cursor" })
+  // Derive session for all cursor routes
+  .derive(async () => {
+    const session = await getSession();
+    return {
+      session,
+      userId: session?.user?.id ?? null,
+    };
+  })
   .post(
     "/post",
-    async ({ body, set }) => {
-      const session = await getSession();
-
-      if (!session?.user?.id) {
+    async ({ body, set, userId }) => {
+      if (!userId) {
         set.status = 401;
         return { error: "Unauthorized" };
       }
 
-      const userId = session.user.id;
       const { name, description, cover, file } = body;
 
       if (!cover || !file) {
-        set.status = 400;
-        return { error: "Cover image and cursor file are required" };
+        throw AppError.badRequest("Cover image and cursor file are required");
       }
 
       const coverService = new CoverUploadService();
@@ -47,14 +52,14 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       const coverKey = await coverService.saveCover(
         userId,
         coverBuffer,
-        cover.type,
+        cover.type
       );
 
       const fileBuffer = Buffer.from(await file.arrayBuffer());
       const fileResult = await fileService.saveFile(
         userId,
         fileBuffer,
-        file.type,
+        file.type
       );
 
       const cursorId = randomUUID();
@@ -86,7 +91,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         cover: t.File(),
         file: t.File(),
       }),
-    },
+    }
   )
   .get("/user/:username", async ({ params, set }) => {
     const { username } = params as { username: string };
@@ -98,8 +103,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
 
     const getUser = users[0];
     if (!getUser) {
-      set.status = 404;
-      return { error: "User not found" };
+      throw AppError.notFound("User not found");
     }
 
     const userCursors = await db
@@ -128,11 +132,8 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
 
     return { cursors: cursorsWithUrls };
   })
-  .get("/:id", async ({ params }) => {
+  .get("/:id", async ({ params, userId }) => {
     const { id } = params as { id: string };
-
-    const session = await getSession();
-    const userId = session?.user?.id ?? null;
 
     const rows = await db
       .select({
@@ -232,7 +233,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 6 }),
         offset: t.Number({ default: 0 }),
       }),
-    },
+    }
   )
   .get(
     "/search",
@@ -289,7 +290,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 10 }),
         offset: t.Number({ default: 0 }),
       }),
-    },
+    }
   )
   .get(
     "/most-liked",
@@ -335,7 +336,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 20 }),
         offset: t.Number({ default: 0 }),
       }),
-    },
+    }
   )
   .get("/related/:id", async ({ params }) => {
     const { id } = params as { id: string };
@@ -385,8 +386,8 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       .where(
         and(
           sql`${cursor.name} ILIKE ${"%" + baseName.split(" ")[0] + "%"}`,
-          sql`${cursor.id} != ${id}`,
-        ),
+          sql`${cursor.id} != ${id}`
+        )
       )
       .orderBy(desc(cursor.createdAt))
       .limit(10);
@@ -464,7 +465,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
             (select count(*) from cursor_like where cursor_like.cursor_id = ${cursor.id}) +
             (select count(*) from cursor_download where cursor_download.cursor_id = ${cursor.id})
           )
-        `),
+        `)
         )
         .limit(limit)
         .offset(offset);
@@ -486,7 +487,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 20 }),
         offset: t.Number({ default: 0 }),
       }),
-    },
+    }
   )
   .post("/:id/download", async ({ params }) => {
     const { id } = params;
@@ -496,7 +497,7 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       .from(cursor)
       .where(eq(cursor.id, id));
 
-    if (!c) return { error: "Cursor not found" };
+    if (!c) throw AppError.notFound("Cursor not found");
 
     db.insert(cursorDownload)
       .values({
@@ -509,16 +510,13 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       fileUrl: getFullFileUrl(c.fileUrl),
     };
   })
-  .post("/:id/like", async ({ params, set }) => {
-    const session = await getSession();
-
-    if (!session?.user?.id) {
+  .post("/:id/like", async ({ params, set, userId }) => {
+    if (!userId) {
       set.status = 401;
       return { error: "Unauthorized" };
     }
 
     const { id } = params as { id: string };
-    const userId = session.user.id;
 
     const existingLike = await db.query.cursorLike.findFirst({
       where: (cl, { and, eq }) =>
@@ -539,27 +537,22 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
 
     return { liked: true };
   })
-  .post("/:id/delete", async ({ params, set }) => {
-    const session = await getSession();
-
-    if (!session?.user?.id) {
+  .post("/:id/delete", async ({ params, set, userId }) => {
+    if (!userId) {
       set.status = 401;
       return { error: "Unauthorized" };
     }
 
     const { id } = params;
-    const userId = session.user.id;
 
     const [c] = await db.select().from(cursor).where(eq(cursor.id, id));
 
     if (!c) {
-      set.status = 404;
-      return { error: "Cursor no encontrado" };
+      throw AppError.notFound("Cursor not found");
     }
 
     if (c.userId !== userId) {
-      set.status = 403;
-      return { error: "No tienes permiso para borrar este cursor" };
+      throw AppError.forbidden("You don't have permission to delete this cursor");
     }
 
     try {
@@ -575,12 +568,11 @@ export const cursorRoute = new Elysia({ prefix: "/cursor" })
       Promise.all([
         coverService.deleteCover(c.previewImage),
         fileService.deleteFile(c.fileUrl),
-      ]).catch((err) => console.error("Error borrando archivos físicos:", err));
+      ]).catch((err) => console.error("Error deleting files:", err));
 
       return { success: true };
     } catch (error) {
       console.error(error);
-      set.status = 500;
-      return { error: "Error al eliminar el cursor" };
+      throw AppError.internal("Error deleting cursor");
     }
   });
