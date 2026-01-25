@@ -134,11 +134,12 @@ export default function SignUp() {
 
         <div className="flex justify-center">
            <Turnstile
-                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                onError={() => setCaptchaToken('error')}
-      onExpire={() => setCaptchaToken('expired')}
-      onSuccess={() => setCaptchaToken('solved')}
-            />
+  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+  onSuccess={(token) => setCaptchaToken(token)}
+  onError={() => setCaptchaToken(null)}
+  onExpire={() => setCaptchaToken(null)}
+/>
+
         </div>
 
         <Button type="submit" disabled={loading} aria-busy={loading}>

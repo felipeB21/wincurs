@@ -97,12 +97,13 @@ export default function SignIn() {
         </div>
 
         <div className="flex justify-center">
-            <Turnstile
-                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                onError={() => setCaptchaToken('error')}
-      onExpire={() => setCaptchaToken('expired')}
-      onSuccess={() => setCaptchaToken('solved')}
-            />
+           <Turnstile
+  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+  onSuccess={(token) => setCaptchaToken(token)}
+  onError={() => setCaptchaToken(null)}
+  onExpire={() => setCaptchaToken(null)}
+/>
+
         </div>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
