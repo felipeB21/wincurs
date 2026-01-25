@@ -8,7 +8,7 @@ import { CursorCard } from "@/components/cursor/card";
 export interface SearchCursor {
   id: string;
   name: string;
-  previewImage: string;
+  previewImage: string | null;
   createdAt: Date;
 
   userId: string;
