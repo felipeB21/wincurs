@@ -19,6 +19,7 @@ export const cursorKeys = {
     [...cursorKeys.all, "search", q, filters] as const,
   userCursors: (username: string) =>
     [...cursorKeys.all, "user", username] as const,
+  mostLiked: (limit: number) => [...cursorKeys.all, "most-liked", limit] as const,
 };
 
 // =============================================================================
@@ -68,6 +69,20 @@ export async function fetchRelatedCursors(id: string): Promise<CursorCard[]> {
   return (res.data ?? []) as CursorCard[];
 }
 
+export async function fetchMostLikedCursors(params: {
+  limit: number;
+  offset: number;
+}): Promise<CursorListResponse> {
+  const headers = await getAuthHeaders();
+  // Apuntamos a la ruta .mostLiked que definiste en Elysia
+  const res = await api.cursor["most-liked"].get({ query: params, headers });
+  
+  if (res.error) {
+    throw new Error("Failed to fetch most liked cursors");
+  }
+  return res.data as CursorListResponse;
+}
+
 export async function fetchPopularCursors(params: {
   limit: number;
   offset: number;
@@ -79,6 +94,8 @@ export async function fetchPopularCursors(params: {
   }
   return res.data as CursorListResponse;
 }
+
+
 
 export async function searchCursors(params: {
   q: string;
@@ -122,6 +139,12 @@ export const cursorQueryOptions = {
         offset: filters.offset ?? 0,
       }),
   }),
+
+  mostLiked: (limit: number) => ({
+    queryKey: cursorKeys.mostLiked(limit),
+    queryFn: () => fetchMostLikedCursors({ limit, offset: 0 }),
+  }),
+
 
   search: (q: string, filters: CursorFilters) => ({
     queryKey: cursorKeys.search(q, filters),

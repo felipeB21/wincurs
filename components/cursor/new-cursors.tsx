@@ -50,7 +50,7 @@ function CursorsList() {
           <CursorCard key={c.id} cursor={c} />
         ))}
       </div>
-      <Button asChild variant="outline" className="w-fit">
+      <Button asChild className="w-full" size={"lg"}>
         <Link href="/cursor/newest">View More</Link>
       </Button>
     </div>
@@ -66,4 +66,3 @@ function CursorsSkeleton() {
     </div>
   );
 }
-

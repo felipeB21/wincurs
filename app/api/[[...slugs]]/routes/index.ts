@@ -20,7 +20,7 @@ export const apiRoutes = new Elysia({ prefix: "/api" })
         "https://inextricable-stefanie-philately.ngrok-free.dev",
       ],
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    })
+    }),
   )
   // Core middleware
   .use(errorHandler)

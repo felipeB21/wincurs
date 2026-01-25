@@ -23,7 +23,6 @@ const getFullFileUrl = (key: string | null) =>
   key ? `${process.env.CLOUDFRONT_URL}/${key}` : null;
 
 export const cursorRoutes = new Elysia({ prefix: "/cursor" })
-  // Derive session for all cursor routes
   .derive(async () => {
     const session = await getSession();
     return {
@@ -52,14 +51,14 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
       const coverKey = await coverService.saveCover(
         userId,
         coverBuffer,
-        cover.type
+        cover.type,
       );
 
       const fileBuffer = Buffer.from(await file.arrayBuffer());
       const fileResult = await fileService.saveFile(
         userId,
         fileBuffer,
-        file.type
+        file.type,
       );
 
       const cursorId = randomUUID();
@@ -91,9 +90,9 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
         cover: t.File(),
         file: t.File(),
       }),
-    }
+    },
   )
-  .get("/user/:username", async ({ params, set }) => {
+  .get("/user/:username", async ({ params }) => {
     const { username } = params as { username: string };
 
     const users = await db
@@ -233,7 +232,7 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 6 }),
         offset: t.Number({ default: 0 }),
       }),
-    }
+    },
   )
   .get(
     "/search",
@@ -290,7 +289,7 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 10 }),
         offset: t.Number({ default: 0 }),
       }),
-    }
+    },
   )
   .get(
     "/most-liked",
@@ -302,14 +301,20 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
         .select({
           id: cursor.id,
           name: cursor.name,
-          description: cursor.description,
           previewImage: cursor.previewImage,
           fileUrl: cursor.fileUrl,
           createdAt: cursor.createdAt,
           userId: user.id,
+          userName: user.name,
           username: user.username,
-          userAvatar: user.image,
-          likeCount: sql<number>`count(${cursorLike.id})::int`.as("likeCount"),
+          userImage: user.image,
+          userTier: user.tier,
+          likes: sql<number>`count(${cursorLike.id})::int`.as("likes"),
+          downloads: sql<number>`
+            (select count(*)::int
+             from cursor_download
+             where cursor_download.cursor_id = ${cursor.id})
+          `,
         })
         .from(cursor)
         .leftJoin(cursorLike, eq(cursor.id, cursorLike.cursorId))
@@ -336,7 +341,7 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 20 }),
         offset: t.Number({ default: 0 }),
       }),
-    }
+    },
   )
   .get("/related/:id", async ({ params }) => {
     const { id } = params as { id: string };
@@ -386,8 +391,8 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
       .where(
         and(
           sql`${cursor.name} ILIKE ${"%" + baseName.split(" ")[0] + "%"}`,
-          sql`${cursor.id} != ${id}`
-        )
+          sql`${cursor.id} != ${id}`,
+        ),
       )
       .orderBy(desc(cursor.createdAt))
       .limit(10);
@@ -465,7 +470,7 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
             (select count(*) from cursor_like where cursor_like.cursor_id = ${cursor.id}) +
             (select count(*) from cursor_download where cursor_download.cursor_id = ${cursor.id})
           )
-        `)
+        `),
         )
         .limit(limit)
         .offset(offset);
@@ -487,7 +492,7 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
         limit: t.Number({ default: 20 }),
         offset: t.Number({ default: 0 }),
       }),
-    }
+    },
   )
   .post("/:id/download", async ({ params }) => {
     const { id } = params;
@@ -552,7 +557,9 @@ export const cursorRoutes = new Elysia({ prefix: "/cursor" })
     }
 
     if (c.userId !== userId) {
-      throw AppError.forbidden("You don't have permission to delete this cursor");
+      throw AppError.forbidden(
+        "You don't have permission to delete this cursor",
+      );
     }
 
     try {

@@ -10,7 +10,7 @@ export default function RelatedContent({ id }: { id: string }) {
     queryKey: cursorKeys.related(id),
     queryFn: () => fetchRelatedCursors(id),
     enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   return (
@@ -49,4 +49,3 @@ function RelatedSkeletons() {
     </>
   );
 }
-

@@ -41,7 +41,6 @@ export default function UserCursor({ username }: { username: string }) {
       </p>
     );
   if (isError) return <p>Error: {(error as Error).message}</p>;
-  console.log(data);
 
   return (
     <div className="columns-3 gap-3 space-y-3">

@@ -17,19 +17,10 @@ import {
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 
+import type { CursorCard } from "@/features/cursor/types";
+
 export interface CursorCardProps {
-  cursor: {
-    id: string;
-    name: string;
-    previewImage: string;
-    downloads: number;
-    likes: number;
-    createdAt: Date;
-    username: string;
-    userName: string;
-    userImage: string | null;
-    userTier: "free" | "premium";
-  };
+  cursor: CursorCard;
 }
 
 export function CursorCard({ cursor }: CursorCardProps) {
