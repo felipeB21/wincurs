@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { username } from "better-auth/plugins";
+import { username, captcha  } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -16,7 +16,7 @@ import { randomUserImage } from "@/lib/avatar";
 
 const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
-  server: "sandbox",
+  server: "production",
 });
 
 export const auth = betterAuth({
@@ -24,7 +24,7 @@ export const auth = betterAuth({
     provider: "pg",
     schema,
   }),
-  trustedOrigins: ["https://inextricable-stefanie-philately.ngrok-free.dev/"],
+  trustedOrigins: ["https://inextricable-stefanie-philately.ngrok-free.dev/", "https://wincurs.vercel.app/"],
   emailAndPassword: {
     enabled: true,
   },
@@ -59,6 +59,10 @@ export const auth = betterAuth({
   },
   plugins: [
     username(),
+     captcha({ 
+            provider: "cloudflare-turnstile", 
+            secretKey: process.env.TURNSTILE_SECRET_KEY!, 
+        }),
     polar({
       client: polarClient,
       createCustomerOnSignUp: true,
