@@ -99,10 +99,9 @@ export default function SignIn() {
         <div className="flex justify-center">
             <Turnstile
                 siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                onSuccess={setCaptchaToken}
-                options={{
-                    theme: "light",
-                }}
+                onError={() => setCaptchaToken('error')}
+      onExpire={() => setCaptchaToken('expired')}
+      onSuccess={() => setCaptchaToken('solved')}
             />
         </div>
 

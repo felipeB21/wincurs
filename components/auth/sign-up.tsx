@@ -133,12 +133,11 @@ export default function SignUp() {
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
         <div className="flex justify-center">
-            <Turnstile
+           <Turnstile
                 siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                onSuccess={setCaptchaToken}
-                options={{
-                    theme: "light",
-                }}
+                onError={() => setCaptchaToken('error')}
+      onExpire={() => setCaptchaToken('expired')}
+      onSuccess={() => setCaptchaToken('solved')}
             />
         </div>
 
