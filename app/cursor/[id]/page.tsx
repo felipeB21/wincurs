@@ -18,12 +18,53 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   try {
     const cursor = await fetchCursor(id);
+    const title = `${cursor.name} - Custom Cursor Download | Wincurs`;
+    const description = `Download the ${cursor.name} custom cursor by ${cursor.userName} for Windows. ${cursor.description || "Free custom cursor download for Windows 10/11."}`;
+    
     return {
-      title: `${cursor.name} - wincurs`,
-      description: `Download ${cursor.name} by ${cursor.userName}. ${cursor.description}`,
+      title,
+      description: description.slice(0, 155),
+      keywords: [
+        "custom cursor",
+        "windows cursor",
+        "mouse pointer",
+        "cursor download",
+        "wincurs",
+        cursor.name,
+        cursor.userName,
+        "windows 10 cursor",
+        "windows 11 cursor"
+      ],
+      openGraph: {
+        title,
+        description: description.slice(0, 155),
+        type: "website",
+        url: `https://wincurs.com/cursor/${cursor.id}`,
+        siteName: "Wincurs",
+        images: cursor.previewImage ? [
+          {
+            url: cursor.previewImage,
+            width: 1200,
+            height: 630,
+            alt: `${cursor.name} custom cursor preview`,
+          },
+        ] : [],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description: description.slice(0, 155),
+        images: cursor.previewImage ? [cursor.previewImage] : [],
+      },
+      alternates: {
+        canonical: `https://wincurs.com/cursor/${cursor.id}`,
+      },
     };
   } catch {
-    return { title: "Cursor Not Found - wincurs" };
+    return { 
+      title: "Cursor Not Found - Wincurs",
+      description: "The requested custom cursor could not be found via Wincurs."
+    };
   }
 }
 
@@ -31,7 +72,6 @@ export default async function CursorIdPage({ params }: Props) {
   const { id } = await params;
   const queryClient = getQueryClient();
 
-  // Prefetch cursor data and related content in parallel
   try {
     await Promise.all([
       queryClient.prefetchQuery({
@@ -47,7 +87,6 @@ export default async function CursorIdPage({ params }: Props) {
     notFound();
   }
 
-  // Get the prefetched cursor to check if it exists
   const cursor = queryClient.getQueryData(cursorKeys.detail(id));
   if (!cursor) notFound();
 
