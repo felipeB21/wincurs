@@ -46,6 +46,7 @@ export function AppSidebar({
     username?: string | null;
     name: string | null;
     image: string | null;
+    tier: string | null;
   };
 }) {
   const pathname = usePathname();
