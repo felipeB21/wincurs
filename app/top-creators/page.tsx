@@ -4,7 +4,7 @@ import { CreatorCard } from "@/components/user/creator-card";
 import { Users2Icon } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Top Creators - WinCurs",
+  title: "Top Creators",
   description: "Discover the most popular cursor creators on WinCurs.",
 };
 
@@ -20,7 +20,7 @@ export default async function TopCreatorsPage() {
         <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
           Top Creators
         </h1>
-        <p className="text-xl text-muted-foreground max-w-[600px]">
+        <p className="text-xl text-muted-foreground max-w-150">
           The most talented designers in our community, ranked by total likes
           and downloads.
         </p>

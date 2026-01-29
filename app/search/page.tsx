@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import SearchClient from "./search-client";
 
 export const metadata: Metadata = {
-  title: "Search - wincurs",
+  title: "Search Cursors",
   description: "Encuentra los mejores cursores personalizados.",
 };
 

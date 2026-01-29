@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { username, captcha  } from "better-auth/plugins";
+import { username } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -24,7 +24,7 @@ export const auth = betterAuth({
     provider: "pg",
     schema,
   }),
-  trustedOrigins: ["https://inextricable-stefanie-philately.ngrok-free.dev/", "https://wincurs.vercel.app/"],
+  trustedOrigins: ["https://wincurs.vercel.app/"],
   emailAndPassword: {
     enabled: true,
   },
@@ -59,10 +59,6 @@ export const auth = betterAuth({
   },
   plugins: [
     username(),
-     captcha({ 
-            provider: "cloudflare-turnstile", 
-            secretKey: process.env.TURNSTILE_SECRET_KEY!, 
-        }),
     polar({
       client: polarClient,
       createCustomerOnSignUp: true,
@@ -84,7 +80,7 @@ export const auth = betterAuth({
             process.env.POLAR_WEBHOOK_SECRET ||
             (() => {
               throw new Error(
-                "POLAR_WEBHOOK_SECRET environment variable is required"
+                "POLAR_WEBHOOK_SECRET environment variable is required",
               );
             })(),
 

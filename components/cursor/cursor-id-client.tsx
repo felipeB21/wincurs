@@ -58,8 +58,7 @@ export default function CursorIdClient({ id }: Props) {
     },
     onMutate: async () => {
       if (!session) {
-        router.push("/sign-in");
-        throw new Error("Unauthorized");
+        return;
       }
 
       await queryClient.cancelQueries({ queryKey: cursorKeys.detail(id) });

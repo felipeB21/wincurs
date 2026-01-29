@@ -7,8 +7,6 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "@/components/ui/label";
 import Google from "./google";
-import { Turnstile } from "@marsidev/react-turnstile";
-
 
 const signInSchema = z.object({
   email: z.email("Invalid email"),
@@ -20,7 +18,6 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     setError(null);
@@ -32,11 +29,6 @@ export default function SignIn() {
 
     if (!parsed.success) {
       setError(parsed.error.issues[0].message);
-      return;
-    }
-
-    if (!captchaToken) {
-      setError("Please complete the captcha");
       return;
     }
 
@@ -59,12 +51,7 @@ export default function SignIn() {
           setLoading(false);
           setError(ctx.error.message);
         },
-        fetchOptions: {
-          headers: {
-            "x-captcha-response": captchaToken,
-          },
-        },
-      }
+      },
     );
   };
 
@@ -94,16 +81,6 @@ export default function SignIn() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
-
-        <div className="flex justify-center">
-           <Turnstile
-  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-  onSuccess={(token) => setCaptchaToken(token)}
-  onError={() => setCaptchaToken(null)}
-  onExpire={() => setCaptchaToken(null)}
-/>
-
         </div>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}

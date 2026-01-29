@@ -2,7 +2,11 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/query-client";
-import { cursorKeys, fetchCursor, fetchRelatedCursors } from "@/features/cursor";
+import {
+  cursorKeys,
+  fetchCursor,
+  fetchRelatedCursors,
+} from "@/features/cursor";
 import CursorIdClient from "@/components/cursor/cursor-id-client";
 import RelatedContent from "@/components/cursor/related-content";
 import { Separator } from "@/components/ui/separator";
@@ -18,9 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   try {
     const cursor = await fetchCursor(id);
-    const title = `${cursor.name} - Custom Cursor Download | Wincurs`;
+    const title = `${cursor.name} - Custom Cursor Download`;
     const description = `Download the ${cursor.name} custom cursor by ${cursor.userName} for Windows. ${cursor.description || "Free custom cursor download for Windows 10/11."}`;
-    
+
     return {
       title,
       description: description.slice(0, 155),
@@ -33,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         cursor.name,
         cursor.userName,
         "windows 10 cursor",
-        "windows 11 cursor"
+        "windows 11 cursor",
       ],
       openGraph: {
         title,
@@ -41,14 +45,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         type: "website",
         url: `https://wincurs.com/cursor/${cursor.id}`,
         siteName: "Wincurs",
-        images: cursor.previewImage ? [
-          {
-            url: cursor.previewImage,
-            width: 1200,
-            height: 630,
-            alt: `${cursor.name} custom cursor preview`,
-          },
-        ] : [],
+        images: cursor.previewImage
+          ? [
+              {
+                url: cursor.previewImage,
+                width: 1200,
+                height: 630,
+                alt: `${cursor.name} custom cursor preview`,
+              },
+            ]
+          : [],
       },
       twitter: {
         card: "summary_large_image",
@@ -61,9 +67,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   } catch {
-    return { 
+    return {
       title: "Cursor Not Found - Wincurs",
-      description: "The requested custom cursor could not be found via Wincurs."
+      description:
+        "The requested custom cursor could not be found via Wincurs.",
     };
   }
 }
@@ -120,4 +127,3 @@ function RelatedContentSkeleton() {
     </div>
   );
 }
-

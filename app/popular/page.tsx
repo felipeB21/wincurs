@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import PopularClient from "./popular-client";
 
 export const metadata: Metadata = {
-  title: "Popular - wincurs",
+  title: "Popular Cursors",
   description: "Encuentra los mejores cursores personalizados.",
 };
 

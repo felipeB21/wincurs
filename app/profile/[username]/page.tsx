@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const username = (await params).username;
 
   return {
-    title: `${username} - wincurs`,
+    title: `${username}'s Profile`,
     description: `Profile of ${username}, explore their cursors and collections.`,
   };
 }

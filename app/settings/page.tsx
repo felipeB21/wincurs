@@ -3,7 +3,7 @@ import { SettingsIcon } from "@/components/settings-icon";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Settings - wincurs",
+  title: "Settings",
   description: "Edit your profile settings.",
 };
 

@@ -1,0 +1,13 @@
+{
+  "name": "Wincurs - Free Custom Cursors for Windows",
+  "short_name": "Wincurs",
+  "description": "Discover and download the best custom cursors for Windows.",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
